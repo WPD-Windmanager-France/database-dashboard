@@ -98,7 +98,7 @@ with st.spinner("Chargement des statistiques..."):
                 query = f"SELECT COUNT(*) as count FROM {table_name}"
                 result = execute_query(query, use_local=USE_LOCAL_DB)
 
-                if result:
+                if result and isinstance(result, list) and len(result) > 0:
                     count = result[0]['count']
                     stats_data.append({
                         "Icône": icon,

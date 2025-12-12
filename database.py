@@ -77,12 +77,15 @@ class DatabaseConnection:
         if not all([server, database]):
             raise ValueError("Configuration Azure SQL manquante (server, database)")
 
-        # Mode Entra ID (préféré)
+        # Entra ID mode (preferred)
         if use_entra_id:
             if not all([tenant_id, client_id, client_secret]):
                 raise ValueError("Configuration Entra ID manquante (tenant_id, client_id, client_secret)")
 
-            # Obtient un token Entra ID avec Service Principal
+            # Type narrowing: at this point we know these values are not None
+            assert tenant_id is not None and client_id is not None and client_secret is not None
+
+            # Get Entra ID token with Service Principal
             credential = ClientSecretCredential(
                 tenant_id=tenant_id,
                 client_id=client_id,
@@ -91,13 +94,14 @@ class DatabaseConnection:
             token_bytes = credential.get_token("https://database.windows.net/.default").token.encode("UTF-16-LE")
             token_struct = struct.pack(f'<I{len(token_bytes)}s', len(token_bytes), token_bytes)
 
-            # Connection string pour Entra ID
+            # Connection string for Entra ID
+            # Note: server and database are guaranteed non-None by earlier check
             connection_url = URL.create(
                 "mssql+pyodbc",
                 query={
                     "driver": "ODBC Driver 18 for SQL Server",
-                    "server": server,
-                    "database": database,
+                    "server": str(server),
+                    "database": str(database),
                     "encrypt": "yes",
                     "TrustServerCertificate": "no",
                     "Connection Timeout": "30",
@@ -114,18 +118,21 @@ class DatabaseConnection:
             )
             return engine
 
-        # Mode SQL Authentication (temporaire)
+        # SQL Authentication mode (temporary)
         else:
             if not all([username, password]):
                 raise ValueError("Configuration SQL Authentication manquante (username, password)")
 
-            # Connection string pour SQL auth
+            # Type narrowing: at this point we know these values are not None
+            assert username is not None and password is not None
+
+            # Connection string for SQL auth
             connection_url = URL.create(
                 "mssql+pyodbc",
-                username=username,
-                password=password,
-                host=server,
-                database=database,
+                username=str(username),
+                password=str(password),
+                host=str(server),
+                database=str(database),
                 query={
                     "driver": "ODBC Driver 18 for SQL Server",
                     "encrypt": "yes",
