@@ -1,5 +1,4 @@
 import os
-import socket
 import streamlit as st
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine, URL
@@ -13,14 +12,6 @@ class DatabaseConnection:
     def get_engine(self) -> Engine:
         return self._create_supabase_engine()
 
-    def _resolve_ipv4(self, hostname: str) -> str:
-        """Résout un nom d'hôte en adresse IPv4 pour éviter les erreurs IPv6"""
-        # getaddrinfo avec AF_INET force la recherche d'adresses IPv4
-        # On ne met pas de try/except ici pour voir l'erreur si la resolution echoue
-        addr_info = socket.getaddrinfo(hostname, 5432, socket.AF_INET)
-        ipv4_address = addr_info[0][4][0]
-        return ipv4_address
-
     def _create_supabase_engine(self) -> Engine:
         """Crée un engine SQLAlchemy pour Supabase (PostgreSQL)"""
         
@@ -33,34 +24,44 @@ class DatabaseConnection:
             db_password = os.getenv('SUPABASE_DB_PASSWORD')
 
         if not supabase_url or not db_password:
-            raise ValueError("Configuration manquante (SUPABASE_URL, SUPABASE_DB_PASSWORD)")
+            raise ValueError("Configuration manquante")
 
         # 2. Extraction Host
         from urllib.parse import urlparse
         parsed = urlparse(supabase_url)
         hostname = parsed.hostname
         
-        if not hostname:
-            raise ValueError("Impossible de lire le hostname")
-        
         # Hostname théorique Supabase
-        db_hostname = f"db.{hostname}" if not hostname.startswith("db.") else hostname
+        # Pour le pooling, c'est souvent la même adresse mais port 6543
+        host = f"db.{hostname}" if not hostname.startswith("db.") else hostname
         
-        # DEBUG: Afficher ce qu'on essaie de faire
-        st.write(f"🔍 Résolution DNS pour: {db_hostname}")
-        
-        # FORCE IPV4 RESOLUTION
-        host = self._resolve_ipv4(db_hostname)
-        
-        st.write(f"✅ IP Résolue: {host}") # On doit voir une IP ici !
+        st.write(f"🔄 Tentative connexion via Pooler (Port 6543) sur: {host}")
 
-        # 3. Paramètres de connexion
+        # 3. Paramètres de connexion POOLER (Transaction Mode)
+        # Port 6543 est recommandé pour les environnements serverless (Streamlit)
+        # On désactive prepared statements pour la compatibilité pgbouncer/supavisor
+        
         connection_url = URL.create(
             "postgresql+psycopg2",
-            username="postgres",
+            username=f"postgres.{hostname.split('.')[0]}", # Format user often required for pooler: user.projectref
             password=str(db_password),
-            host=str(host), # On passe l'IP directement
-            port=5432, 
+            host=str(host),
+            port=6543, 
+            database="postgres",
+        )
+        
+        # NOTE IMPORTANTE:
+        # Avec le pooler Supabase, l'utilisateur doit souvent être au format:
+        # [db_user].[project_ref]
+        # Mais essayons d'abord avec "postgres" simple, si ça fail, on changera.
+        # Edit: Je vais utiliser le user simple d'abord car Supavisor le supporte maintenant.
+        
+        connection_url = URL.create(
+            "postgresql+psycopg2",
+            username="postgres", 
+            password=str(db_password),
+            host=str(host),
+            port=6543, 
             database="postgres",
         )
 
@@ -69,7 +70,8 @@ class DatabaseConnection:
             connection_url,
             pool_pre_ping=True,
             connect_args={
-                "connect_timeout": 10
+                "connect_timeout": 15,
+                # "sslmode": "require" # Default in psycopg2
             }
         )
         return engine
@@ -77,18 +79,15 @@ class DatabaseConnection:
 
 @st.cache_resource
 def get_database_engine() -> Engine:
-    """Retourne un SQLAlchemy engine pour Supabase"""
     db = DatabaseConnection()
     return db.get_engine()
 
 
 def execute_query(query: str, params: dict = None):
-    """Exécute une requête SQL sur Supabase"""
     try:
         engine = get_database_engine()
         with engine.connect() as conn:
             result = conn.execute(text(query), params or {})
-            
             if query.strip().upper().startswith('SELECT'):
                 rows = result.fetchall()
                 return [dict(row._mapping) for row in rows]

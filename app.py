@@ -9,7 +9,7 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("🐛 Wind Manager - DEBUG V3 (Force IPv4)")
+st.title("Windmanager - DEBUG V3 (Force IPv4)")
 st.caption("Si vous ne voyez pas ce titre, Streamlit n'a pas mis à jour le code.")
 
 # Sidebar Debug
