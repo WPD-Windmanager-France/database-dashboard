@@ -1,19 +1,15 @@
 import os
-import struct
 from typing import Optional
 from dotenv import load_dotenv
 import streamlit as st
 from sqlalchemy import create_engine, text
-from sqlalchemy.engine import URL, Engine
-from azure.identity import ClientSecretCredential
-import pyodbc
-from urllib.parse import quote_plus
+from sqlalchemy.engine import Engine, URL
 
 load_dotenv()
 
 
 class DatabaseConnection:
-    """Gère la connexion à la base de données (Azure SQL avec Entra ID ou SQL auth, ou SQLite local)"""
+    """Gère la connexion à la base de données (Supabase PostgreSQL ou SQLite local)"""
 
     def __init__(self, use_local: bool = False):
         self.use_local = use_local
@@ -24,7 +20,7 @@ class DatabaseConnection:
         if self.use_local:
             return self._create_sqlite_engine()
         else:
-            return self._create_azure_engine()
+            return self._create_supabase_engine()
 
     def _create_sqlite_engine(self) -> Engine:
         """Crée un engine SQLAlchemy pour SQLite local"""
@@ -40,109 +36,49 @@ class DatabaseConnection:
         )
         return engine
 
-    def _create_azure_engine(self) -> Engine:
-        """Crée un engine SQLAlchemy pour Azure SQL (Entra ID ou SQL authentication)"""
-        # Récupère les informations depuis l'environnement ou Streamlit secrets
-        if hasattr(st, 'secrets') and 'AZURE_SQL_SERVER' in st.secrets:
-            server = st.secrets['AZURE_SQL_SERVER']
-            database = st.secrets['AZURE_SQL_DATABASE']
-            use_entra_id = st.secrets.get('USE_ENTRA_ID', 'false').lower() == 'true'
+    def _create_supabase_engine(self) -> Engine:
+        """Crée un engine SQLAlchemy pour Supabase (PostgreSQL)"""
+        
+        # Helper pour récupérer une valeur depuis secrets ou env
+        def get_config(key, default=None):
+            if hasattr(st, 'secrets') and key in st.secrets:
+                return st.secrets[key]
+            return os.getenv(key, default)
 
-            if use_entra_id:
-                tenant_id = st.secrets['AZURE_TENANT_ID']
-                client_id = st.secrets['AZURE_CLIENT_ID']
-                client_secret = st.secrets['AZURE_CLIENT_SECRET']
-                username = None
-                password = None
-            else:
-                username = st.secrets['AZURE_SQL_USER']
-                password = st.secrets['AZURE_SQL_PASSWORD']
-                tenant_id = client_id = client_secret = None
-        else:
-            server = os.getenv('AZURE_SQL_SERVER')
-            database = os.getenv('AZURE_SQL_DATABASE')
-            use_entra_id = os.getenv('USE_ENTRA_ID', 'false').lower() == 'true'
+        # Récupération des credentials
+        # On cherche d'abord les clés spécifiques SUPABASE, puis génériques DB
+        host = get_config('SUPABASE_HOST') or get_config('DB_HOST')
+        database = get_config('SUPABASE_DATABASE') or get_config('DB_NAME')
+        user = get_config('SUPABASE_USER') or get_config('DB_USER')
+        password = get_config('SUPABASE_PASSWORD') or get_config('DB_PASSWORD')
+        port = get_config('SUPABASE_PORT') or get_config('DB_PORT', 5432)
 
-            if use_entra_id:
-                tenant_id = os.getenv('AZURE_TENANT_ID')
-                client_id = os.getenv('AZURE_CLIENT_ID')
-                client_secret = os.getenv('AZURE_CLIENT_SECRET')
-                username = None
-                password = None
-            else:
-                username = os.getenv('AZURE_SQL_USER')
-                password = os.getenv('AZURE_SQL_PASSWORD')
-                tenant_id = client_id = client_secret = None
+        if not all([host, database, user, password]):
+            missing = []
+            if not host: missing.append("HOST")
+            if not database: missing.append("DATABASE")
+            if not user: missing.append("USER")
+            if not password: missing.append("PASSWORD")
+            raise ValueError(f"Configuration Supabase manquante: {', '.join(missing)}")
 
-        if not all([server, database]):
-            raise ValueError("Configuration Azure SQL manquante (server, database)")
+        # Construction de l'URL de connexion
+        # Format: postgresql+psycopg2://user:password@host:port/dbname
+        connection_url = URL.create(
+            "postgresql+psycopg2",
+            username=str(user),
+            password=str(password),
+            host=str(host),
+            port=int(port),
+            database=str(database),
+        )
 
-        # Entra ID mode (preferred)
-        if use_entra_id:
-            if not all([tenant_id, client_id, client_secret]):
-                raise ValueError("Configuration Entra ID manquante (tenant_id, client_id, client_secret)")
-
-            # Type narrowing: at this point we know these values are not None
-            assert tenant_id is not None and client_id is not None and client_secret is not None
-
-            # Get Entra ID token with Service Principal
-            credential = ClientSecretCredential(
-                tenant_id=tenant_id,
-                client_id=client_id,
-                client_secret=client_secret
-            )
-            token_bytes = credential.get_token("https://database.windows.net/.default").token.encode("UTF-16-LE")
-            token_struct = struct.pack(f'<I{len(token_bytes)}s', len(token_bytes), token_bytes)
-
-            # Connection string for Entra ID
-            # Note: server and database are guaranteed non-None by earlier check
-            connection_url = URL.create(
-                "mssql+pyodbc",
-                query={
-                    "driver": "ODBC Driver 18 for SQL Server",
-                    "server": str(server),
-                    "database": str(database),
-                    "encrypt": "yes",
-                    "TrustServerCertificate": "no",
-                    "Connection Timeout": "30",
-                }
-            )
-
-            engine = create_engine(
-                connection_url,
-                connect_args={
-                    "attrs_before": {
-                        1256: token_struct  # SQL_COPT_SS_ACCESS_TOKEN
-                    }
-                }
-            )
-            return engine
-
-        # SQL Authentication mode (temporary)
-        else:
-            if not all([username, password]):
-                raise ValueError("Configuration SQL Authentication manquante (username, password)")
-
-            # Type narrowing: at this point we know these values are not None
-            assert username is not None and password is not None
-
-            # Connection string for SQL auth
-            connection_url = URL.create(
-                "mssql+pyodbc",
-                username=str(username),
-                password=str(password),
-                host=str(server),
-                database=str(database),
-                query={
-                    "driver": "ODBC Driver 18 for SQL Server",
-                    "encrypt": "yes",
-                    "TrustServerCertificate": "no",
-                    "Connection Timeout": "30",
-                }
-            )
-
-            engine = create_engine(connection_url)
-            return engine
+        # Création de l'engine
+        # pool_pre_ping=True est utile pour les connexions cloud qui peuvent se fermer
+        engine = create_engine(
+            connection_url,
+            pool_pre_ping=True
+        )
+        return engine
 
 
 @st.cache_resource
@@ -151,7 +87,7 @@ def get_database_engine(use_local: bool = False) -> Engine:
     Retourne un SQLAlchemy engine avec cache Streamlit
 
     Args:
-        use_local: True pour SQLite local, False pour Azure SQL avec Azure AD
+        use_local: True pour SQLite local, False pour Supabase (Postgres)
 
     Returns:
         SQLAlchemy Engine
@@ -167,7 +103,7 @@ def execute_query(query: str, params: Optional[dict] = None, use_local: bool = F
     Args:
         query: Requête SQL à exécuter (utilisez :param pour les paramètres nommés)
         params: Dictionnaire de paramètres pour la requête (optional)
-        use_local: True pour SQLite local, False pour Azure SQL
+        use_local: True pour SQLite local, False pour Supabase
 
     Returns:
         Liste de dictionnaires pour SELECT, nombre de lignes affectées sinon
@@ -176,12 +112,15 @@ def execute_query(query: str, params: Optional[dict] = None, use_local: bool = F
         engine = get_database_engine(use_local=use_local)
 
         with engine.connect() as conn:
+            # Pour SQLAlchemy avec psycopg2, les paramètres nommés fonctionnent généralement
+            # mais il est plus sûr d'utiliser text()
             result = conn.execute(text(query), params or {})
 
             # Pour les SELECT
             if query.strip().upper().startswith('SELECT'):
+                # fetchall retourne des Row objects qui se comportent comme des tuples nommés
+                # on peut les convertir en dict via _mapping
                 rows = result.fetchall()
-                # Convertit en liste de dictionnaires
                 return [dict(row._mapping) for row in rows]
             else:
                 # Pour les INSERT, UPDATE, DELETE
@@ -190,4 +129,6 @@ def execute_query(query: str, params: Optional[dict] = None, use_local: bool = F
 
     except Exception as e:
         st.error(f"Erreur lors de l'exécution de la requête: {str(e)}")
+        # En prod, on pourrait vouloir logger l'erreur complète
+        print(f"Database Error: {e}")
         return None

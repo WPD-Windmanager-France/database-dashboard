@@ -27,8 +27,8 @@ with st.sidebar:
         st.info("🏠 **Mode:** Local (SQLite)")
         st.caption("Base: DATA/windmanager.db")
     else:
-        st.success("☁️ **Mode:** Cloud (Azure SQL)")
-        st.caption("Azure AD Authentication")
+        st.success("☁️ **Mode:** Cloud (Supabase)")
+        st.caption("PostgreSQL Connection")
 
     # Test de connexion
     st.divider()
@@ -165,14 +165,14 @@ with col1:
 
     **Fonctionnalités:**
     - Vue d'ensemble du nombre de lignes par table
-    - Support SQLite (local) et Azure SQL (cloud)
-    - Authentification Azure AD pour le cloud
+    - Support SQLite (local) et Supabase (cloud)
+    - Connexion sécurisée PostgreSQL
     """)
 
 with col2:
     st.markdown("""
     ### Prochaines étapes
-    1. ✅ Connexion Azure AD configurée
+    1. ✅ Connexion Supabase configurée
     2. ✅ Statistiques de base affichées
     3. ⏳ CI/CD à mettre en place
     4. ⏳ Formulaires CRUD à développer
