@@ -12,7 +12,12 @@ st.set_page_config(
 )
 
 # Détecte l'environnement (local ou cloud)
-USE_LOCAL_DB = os.getenv("USE_LOCAL_DB", "true").lower() == "true"
+# Priorité : st.secrets -> os.getenv -> Default (False/Cloud)
+if hasattr(st, "secrets") and "USE_LOCAL_DB" in st.secrets:
+    USE_LOCAL_DB = str(st.secrets["USE_LOCAL_DB"]).lower() == "true"
+else:
+    # Par défaut False (Cloud) pour la prod, sauf si .env local dit le contraire
+    USE_LOCAL_DB = os.getenv("USE_LOCAL_DB", "false").lower() == "true"
 
 # Titre principal
 st.title("🌬️ Wind Manager - Database Statistics")
