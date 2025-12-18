@@ -49,15 +49,26 @@ stats_data = []
 with st.spinner("Chargement des statistiques..."):
     for table_name in TABLES:
         try:
+            # Récupérer les données pour compter les entrées
             data = execute_query(table=table_name, columns="*")
             count = len(data) if data else 0
+
+            # Compter le nombre de colonnes
+            if data and len(data) > 0:
+                num_columns = len(data[0].keys())
+            else:
+                # Si la table est vide, on ne peut pas déterminer le nombre de colonnes facilement
+                num_columns = "N/A"
+
             stats_data.append({
                 "Table": table_name,
+                "Colonnes": num_columns,
                 "Entrées": count
             })
         except Exception as e:
             stats_data.append({
                 "Table": table_name,
+                "Colonnes": "Erreur",
                 "Entrées": "Erreur"
             })
 
@@ -70,6 +81,7 @@ st.dataframe(
     hide_index=True,
     column_config={
         "Table": st.column_config.TextColumn("Table", width="large"),
+        "Colonnes": st.column_config.NumberColumn("Colonnes", format="%d"),
         "Entrées": st.column_config.NumberColumn("Lignes", format="%d")
     }
 )
