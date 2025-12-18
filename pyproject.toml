@@ -1,0 +1,22 @@
+[project]
+name = "wndmngr-app"
+version = "1.0.0"
+description = "Windmanager Database Management Application"
+requires-python = ">=3.9"
+
+dependencies = [
+    "streamlit>=1.32.0",
+    "supabase>=2.0.0",
+    "dynaconf>=3.2.0",
+    "pandas>=2.2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "sqlalchemy>=2.0.0",
+    "python-dotenv>=1.0.0",
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_backend"

@@ -1,0 +1,17 @@
+[default]
+# Configuration par défaut (partagée entre tous les environnements)
+# Production par défaut pour sécurité en déploiement cloud
+app_name = "Windmanager"
+environment = "production"
+db_type = "supabase"
+
+[development]
+# Environnement de développement local
+environment = "development"
+db_type = "sqlite"
+db_path = "DATA/windmanager.db"
+
+[production]
+# Environnement de production (Streamlit Cloud)
+environment = "production"
+db_type = "supabase"

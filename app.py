@@ -1,36 +1,65 @@
 import streamlit as st
 import pandas as pd
-from database import execute_query, init_supabase_connection
+from config import settings
+from database import execute_rpc
 
 # Configuration de la page
 st.set_page_config(
-    page_title="Wind Manager - Database",
+    page_title="Windmanager France - Database",
     page_icon="",
     layout="wide"
 )
 
-st.title("Windmanager - Connexion Base de Données")
-st.caption("Utilisation du client Supabase via API REST")
+st.title("Windmanager - Database")
+st.caption(f"Environnement: {settings.environment} | Base de données: {settings.db_type}")
 
-# Sidebar Debug
-with st.sidebar:
-    st.header("État de la connexion")
-    if st.button("Tester la connexion"):
-        try:
-            client = init_supabase_connection()
-            st.success("Client Supabase connecté")
-        except Exception as e:
-            st.error(f"Erreur: {e}")
+# Récupération des statistiques via RPC
+with st.spinner("Chargement des statistiques..."):
+    try:
+        data = execute_rpc('get_table_stats')
 
-# Liste des tables
-TABLES = [("companies", "Entreprises")]
+        # Transformer les données pour le DataFrame
+        stats_data = []
+        for row in data:
+            stats_data.append({
+                "Table": row.get('table_name', 'N/A'),
+                "Colonnes": row.get('column_count', 'N/A'),
+                "Entrées": row.get('row_count', 'N/A')
+            })
 
-for table_name, label in TABLES:
-    st.subheader(f"Table: {label} ({table_name})")
-    data = execute_query(table=table_name, columns="*")
-    if data:
-        st.success(f"{len(data)} enregistrement(s) trouvé(s)")
-        df = pd.DataFrame(data)
-        st.dataframe(df, use_container_width=True)
-    else:
-        st.warning(f"Aucune donnée dans la table {table_name}")
+        df = pd.DataFrame(stats_data)
+
+        # Trier par nombre d'entrées décroissant
+        df = df.sort_values(by='Entrées', ascending=False).reset_index(drop=True)
+
+    except Exception as e:
+        st.error(f"Erreur lors du chargement des statistiques: {e}")
+        df = pd.DataFrame(columns=["Table", "Colonnes", "Entrées"])
+
+st.dataframe(
+    df,
+    use_container_width=True,
+    hide_index=True,
+    column_config={
+        "Table": st.column_config.TextColumn("Table", width="large"),
+        "Colonnes": st.column_config.NumberColumn("Colonnes", format="%d"),
+        "Entrées": st.column_config.NumberColumn("Lignes", format="%d")
+    }
+)
+
+# Statistiques globales
+if not df.empty:
+    try:
+        total_entries = df["Entrées"].sum()
+        populated_tables = len(df[df["Entrées"] > 0])
+        total_tables = len(df)
+
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Total entrées", f"{total_entries:,}")
+        with col2:
+            st.metric("Tables avec données", f"{populated_tables}/{total_tables}")
+        with col3:
+            st.metric("Tables vides", f"{total_tables - populated_tables}")
+    except:
+        pass
