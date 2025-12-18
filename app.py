@@ -23,6 +23,7 @@ with st.spinner("Chargement des statistiques..."):
         for row in response.data:
             stats_data.append({
                 "Table": row['table_name'],
+                "Colonnes": row['column_count'],
                 "Entrées": row['row_count']
             })
 
@@ -30,7 +31,7 @@ with st.spinner("Chargement des statistiques..."):
 
     except Exception as e:
         st.error(f"Erreur lors du chargement des statistiques: {e}")
-        df = pd.DataFrame(columns=["Table", "Entrées"])
+        df = pd.DataFrame(columns=["Table", "Colonnes", "Entrées"])
 
 st.dataframe(
     df,
@@ -38,6 +39,7 @@ st.dataframe(
     hide_index=True,
     column_config={
         "Table": st.column_config.TextColumn("Table", width="large"),
+        "Colonnes": st.column_config.NumberColumn("Colonnes", format="%d"),
         "Entrées": st.column_config.NumberColumn("Lignes", format="%d")
     }
 )
