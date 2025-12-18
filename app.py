@@ -18,19 +18,24 @@ with st.spinner("Chargement des statistiques..."):
         client = init_supabase_connection()
         response = client.rpc('get_table_stats').execute()
 
+        # Debug: afficher la structure des données retournées
+        if response.data and len(response.data) > 0:
+            st.write("Debug - Premier enregistrement:", response.data[0])
+
         # Transformer les données pour le DataFrame
         stats_data = []
         for row in response.data:
             stats_data.append({
-                "Table": row['table_name'],
-                "Colonnes": row['column_count'],
-                "Entrées": row['row_count']
+                "Table": row.get('table_name', 'N/A'),
+                "Colonnes": row.get('column_count', 'N/A'),
+                "Entrées": row.get('row_count', 'N/A')
             })
 
         df = pd.DataFrame(stats_data)
 
     except Exception as e:
         st.error(f"Erreur lors du chargement des statistiques: {e}")
+        st.exception(e)
         df = pd.DataFrame(columns=["Table", "Colonnes", "Entrées"])
 
 st.dataframe(
