@@ -1,5 +1,6 @@
-import streamlit as st
 import pandas as pd
+import streamlit as st
+
 from config import settings
 from database import execute_rpc
 
@@ -61,5 +62,5 @@ if not df.empty:
             st.metric("Tables avec données", f"{populated_tables}/{total_tables}")
         with col3:
             st.metric("Tables vides", f"{total_tables - populated_tables}")
-    except:
+    except Exception:
         pass

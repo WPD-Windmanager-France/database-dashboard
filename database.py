@@ -1,8 +1,10 @@
 """Database connection module supporting both SQLite (local) and Supabase (production)"""
 
 import os
+from typing import Any, Optional
+
 import streamlit as st
-from typing import Optional, Any
+
 from config import settings
 
 # Import conditionnel selon l'environnement
@@ -10,7 +12,7 @@ if settings.db_type == "sqlite":
     from sqlalchemy import create_engine, text
     from sqlalchemy.engine import Engine
 elif settings.db_type == "supabase":
-    from supabase import create_client, Client
+    from supabase import Client, create_client
 
 
 # ==================== SQLite Functions ====================

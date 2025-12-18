@@ -1,5 +1,4 @@
 """Tests de connexion et fonctions database"""
-import pytest
 from config import settings
 
 
@@ -31,8 +30,11 @@ def test_sqlite_connection():
 def test_supabase_imports():
     """Vérifie que les imports Supabase fonctionnent"""
     if settings.db_type == "supabase":
-        from database import init_supabase_connection, execute_supabase_rpc
+        from database import execute_supabase_rpc, init_supabase_connection
+
         # Si l'import passe, c'est bon
+        assert callable(init_supabase_connection)
+        assert callable(execute_supabase_rpc)
 
 
 def test_unified_rpc_interface():
