@@ -12,57 +12,25 @@ st.set_page_config(
 st.title("Windmanager - Database")
 
 
-# Liste complète des tables
-TABLES = [
-    "company_roles",
-    "farm_types",
-    "person_roles",
-    "companies",
-    "employees",
-    "farms",
-    "ice_detection_systems",
-    "persons",
-    "substations",
-    "wind_turbine_generators",
-    "farm_company_roles",
-    "farm_referents",
-    "farm_actual_performances",
-    "farm_administrations",
-    "farm_electrical_delegations",
-    "farm_environmental_installations",
-    "farm_financial_guarantees",
-    "farm_ice_detection_systems",
-    "farm_locations",
-    "farm_om_contracts",
-    "farm_statuses",
-    "farm_substation_details",
-    "farm_target_performances",
-    "farm_tariffs",
-    "farm_tcma_contracts",
-    "farm_turbine_details",
-    "ingestion_versions"
-]
-
-# Récupération des statistiques
-stats_data = []
-
+# Récupération des statistiques via RPC
 with st.spinner("Chargement des statistiques..."):
-    for table_name in TABLES:
-        try:
-            data = execute_query(table=table_name, columns="*")
-            count = len(data) if data else 0
+    try:
+        client = init_supabase_connection()
+        response = client.rpc('get_table_stats').execute()
+
+        # Transformer les données pour le DataFrame
+        stats_data = []
+        for row in response.data:
             stats_data.append({
-                "Table": table_name,
-                "Entrées": count
-            })
-        except Exception as e:
-            stats_data.append({
-                "Table": table_name,
-                "Entrées": "Erreur"
+                "Table": row['table_name'],
+                "Entrées": row['row_count']
             })
 
-# Affichage du DataFrame
-df = pd.DataFrame(stats_data)
+        df = pd.DataFrame(stats_data)
+
+    except Exception as e:
+        st.error(f"Erreur lors du chargement des statistiques: {e}")
+        df = pd.DataFrame(columns=["Table", "Entrées"])
 
 st.dataframe(
     df,
@@ -75,17 +43,18 @@ st.dataframe(
 )
 
 # Statistiques globales
-try:
-    numeric_df = df[df["Entrées"].apply(lambda x: isinstance(x, int))]
-    total_entries = numeric_df["Entrées"].sum()
-    populated_tables = len(numeric_df[numeric_df["Entrées"] > 0])
+if not df.empty:
+    try:
+        total_entries = df["Entrées"].sum()
+        populated_tables = len(df[df["Entrées"] > 0])
+        total_tables = len(df)
 
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.metric("Total entrées", f"{total_entries:,}")
-    with col2:
-        st.metric("Tables avec données", f"{populated_tables}/{len(TABLES)}")
-    with col3:
-        st.metric("Tables vides", f"{len(TABLES) - populated_tables}")
-except:
-    pass
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Total entrées", f"{total_entries:,}")
+        with col2:
+            st.metric("Tables avec données", f"{populated_tables}/{total_tables}")
+        with col3:
+            st.metric("Tables vides", f"{total_tables - populated_tables}")
+    except:
+        pass
