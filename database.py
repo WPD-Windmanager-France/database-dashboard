@@ -2,7 +2,7 @@
 
 import os
 import streamlit as st
-from typing import Optional
+from typing import Optional, Any
 from config import settings
 
 # Import conditionnel selon l'environnement
@@ -93,7 +93,7 @@ def init_supabase_connection() -> "Client":
         raise
 
 
-def execute_supabase_rpc(function_name: str) -> list[dict]:
+def execute_supabase_rpc(function_name: str) -> Any:
     """Exécute une fonction RPC Supabase"""
     client = init_supabase_connection()
     response = client.rpc(function_name).execute()
@@ -102,7 +102,7 @@ def execute_supabase_rpc(function_name: str) -> list[dict]:
 
 # ==================== Unified Interface ====================
 
-def execute_rpc(function_name: str) -> list[dict]:
+def execute_rpc(function_name: str) -> Any:
     """
     Interface unifiée pour exécuter des fonctions RPC
     Route automatiquement vers SQLite ou Supabase selon la configuration
@@ -115,7 +115,7 @@ def execute_rpc(function_name: str) -> list[dict]:
         raise ValueError(f"Type de base de données non supporté: {settings.db_type}")
 
 
-def execute_query(table: str, columns: str = "*", filters: Optional[dict] = None) -> Optional[list[dict]]:
+def execute_query(table: str, columns: str = "*", filters: Optional[dict] = None) -> Any:
     """
     Exécute une requête SELECT sur une table (Supabase uniquement pour l'instant)
     """
