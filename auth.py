@@ -2,6 +2,7 @@
 
 import re
 from typing import Optional, Tuple
+
 import streamlit as st
 
 from config import settings
@@ -9,10 +10,12 @@ from config import settings
 # Imports conditionnels selon l'environnement
 if settings.db_type == "supabase":
     from supabase import Client
+
     from database import init_supabase_connection
 elif settings.db_type == "sqlite":
-    from database import get_sqlite_engine
     from sqlalchemy import text
+
+    from database import get_sqlite_engine
 
 
 # ==================== Constants ====================
@@ -250,7 +253,7 @@ def get_user_role_supabase(user_id: str) -> str:
             data = response.data[0]
             if isinstance(data, dict):
                 return str(data.get('role', 'user'))
-        
+
         return 'user'
 
     except Exception:

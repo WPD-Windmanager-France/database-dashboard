@@ -1,9 +1,9 @@
 import pandas as pd
 import streamlit as st
 
+from auth import require_authentication, show_user_info
 from config import settings
 from database import execute_rpc
-from auth import require_authentication, show_user_info
 
 # Configuration de la page
 st.set_page_config(
