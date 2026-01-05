@@ -26,7 +26,7 @@ def test_email_validation():
     # Invalid format
     is_valid, msg = validate_email_domain("not-an-email")
     assert is_valid is False
-    assert "invalide" in msg.lower()
+    assert "invalid" in msg.lower()
 
     is_valid, msg = validate_email_domain("missing-at-sign.com")
     assert is_valid is False
