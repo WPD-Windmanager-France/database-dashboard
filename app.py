@@ -17,7 +17,7 @@ st.set_page_config(
 if not require_authentication():
     st.stop()  # Stop execution if not authenticated
 
-st.title("Windmanager - Database")
+# Show environment info
 st.caption(f"Environment: {settings.environment} | Database: {settings.db_type}")
 
 # Show user info in sidebar

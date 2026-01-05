@@ -383,7 +383,7 @@ def require_authentication():
 
 def show_auth_ui():
     """Display login/signup UI"""
-    st.title("Windmanager - Authentication")
+    st.title("Windmanager France Database")
 
     # Show environment info
     env_label = "Production (Supabase)" if settings.db_type == "supabase" else "Development (SQLite)"
