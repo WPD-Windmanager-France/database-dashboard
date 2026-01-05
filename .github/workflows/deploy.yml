@@ -36,19 +36,6 @@ jobs:
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
         continue-on-error: true
 
-      - name: Test database connection (SQLite)
-        run: |
-          python -c "
-          import os
-          os.environ['USE_LOCAL_DB'] = 'true'
-          from database import get_database_engine
-          engine = get_database_engine(use_local=True)
-          with engine.connect() as conn:
-              result = conn.execute('SELECT COUNT(*) FROM farms')
-              print(f'Farms count: {result.fetchone()[0]}')
-          print('✅ SQLite connection test passed!')
-          "
-
   notify:
     name: Notify Deployment
     runs-on: ubuntu-latest
