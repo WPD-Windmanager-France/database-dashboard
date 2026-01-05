@@ -65,7 +65,7 @@ target-version = "py39"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I"]
-ignore = ["E501", "I", "F541", "F401", "W293"]  # E501: line length, I: imports, F541: f-strings, F401: unused imports, W293: whitespace
+ignore = ["E501"]  # Line too long (géré par line-length)
 
 [tool.pytest.ini_options]
 testpaths = ["TESTS"]
