@@ -1,40 +1,50 @@
-import streamlit as st
 import pandas as pd
-from database import execute_query, init_supabase_connection
+import streamlit as st
+
+from config import settings
+from database import execute_rpc
+from auth import require_authentication, show_user_info
 
 # Configuration de la page
 st.set_page_config(
-    page_title="Windmanager France- Database",
+    page_title="Windmanager France - Database",
     page_icon="",
     layout="wide"
 )
 
-st.title("Windmanager - Database")
+# ==================== AUTHENTICATION GATE ====================
+# This must be called BEFORE any app content
+if not require_authentication():
+    st.stop()  # Stop execution if not authenticated
 
+# Show environment info
+st.caption(f"Environment: {settings.environment} | Database: {settings.db_type}")
 
-# Récupération des statistiques via RPC
-with st.spinner("Chargement des statistiques..."):
+# Show user info in sidebar
+show_user_info()
+
+# Fetch statistics via RPC
+with st.spinner("Loading statistics..."):
     try:
-        client = init_supabase_connection()
-        response = client.rpc('get_table_stats').execute()
+        data = execute_rpc('get_table_stats')
 
-        # Transformer les données pour le DataFrame
+        # Transform data for DataFrame
         stats_data = []
-        for row in response.data:
+        for row in data:
             stats_data.append({
                 "Table": row.get('table_name', 'N/A'),
-                "Colonnes": row.get('column_count', 'N/A'),
-                "Entrées": row.get('row_count', 'N/A')
+                "Columns": row.get('column_count', 'N/A'),
+                "Rows": row.get('row_count', 'N/A')
             })
 
         df = pd.DataFrame(stats_data)
 
-        # Trier par nombre d'entrées décroissant
-        df = df.sort_values(by='Entrées', ascending=False).reset_index(drop=True)
+        # Sort by row count descending
+        df = df.sort_values(by='Rows', ascending=False).reset_index(drop=True)
 
     except Exception as e:
-        st.error(f"Erreur lors du chargement des statistiques: {e}")
-        df = pd.DataFrame(columns=["Table", "Colonnes", "Entrées"])
+        st.error(f"Error loading statistics: {e}")
+        df = pd.DataFrame(columns=["Table", "Columns", "Rows"])
 
 st.dataframe(
     df,
@@ -42,24 +52,24 @@ st.dataframe(
     hide_index=True,
     column_config={
         "Table": st.column_config.TextColumn("Table", width="large"),
-        "Colonnes": st.column_config.NumberColumn("Colonnes", format="%d"),
-        "Entrées": st.column_config.NumberColumn("Lignes", format="%d")
+        "Columns": st.column_config.NumberColumn("Columns", format="%d"),
+        "Rows": st.column_config.NumberColumn("Rows", format="%d")
     }
 )
 
-# Statistiques globales
+# Global statistics
 if not df.empty:
     try:
-        total_entries = df["Entrées"].sum()
-        populated_tables = len(df[df["Entrées"] > 0])
+        total_entries = df["Rows"].sum()
+        populated_tables = len(df[df["Rows"] > 0])
         total_tables = len(df)
 
         col1, col2, col3 = st.columns(3)
         with col1:
-            st.metric("Total entrées", f"{total_entries:,}")
+            st.metric("Total Rows", f"{total_entries:,}")
         with col2:
-            st.metric("Tables avec données", f"{populated_tables}/{total_tables}")
+            st.metric("Tables with Data", f"{populated_tables}/{total_tables}")
         with col3:
-            st.metric("Tables vides", f"{total_tables - populated_tables}")
-    except:
+            st.metric("Empty Tables", f"{total_tables - populated_tables}")
+    except Exception:
         pass

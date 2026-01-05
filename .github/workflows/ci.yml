@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: ["main", "dev", "FT/**"]
+  pull_request:
+    branches: ["main", "dev"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest ruff sqlalchemy
+
+      - name: Lint with ruff
+        run: ruff check .
+
+      - name: Test Python imports
+        run: |
+          python -c "import streamlit; print('✅ streamlit')"
+          python -c "import dynaconf; print('✅ dynaconf')"
+          python -c "import supabase; print('✅ supabase')"
+          python -c "import pandas; print('✅ pandas')"
+          python -c "from config import settings; print(f'✅ config loaded: {settings.environment}')"
+
+      - name: Run pytest
+        env:
+          ENV_FOR_DYNACONF: development
+          PYTHONPATH: .
+        run: pytest TESTS/ -v --tb=short

@@ -144,6 +144,9 @@ ENV/
 env.bak/
 venv.bak/
 
+# Dynaconf secrets
+.secrets.toml
+
 # Spyder project settings
 .spyderproject
 .spyproject
@@ -209,3 +212,7 @@ __marimo__/
 RESOURCES/
 DATA/
 install.py
+
+
+
+*.ipynb
