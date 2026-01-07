@@ -3,7 +3,6 @@ import streamlit as st
 from auth import require_authentication, show_user_info
 from config import settings
 from database import get_all_farms, get_farm_by_code
-from auth import require_authentication, show_user_info
 
 # Configuration de la page
 st.set_page_config(
