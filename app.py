@@ -169,24 +169,18 @@ with st.sidebar:
 
         selected_farm_code = farm_options[selected_display]
 
-        st.divider()
-
-        # Add new farm button
-        if st.button("Add New Farm", use_container_width=True, type="primary"):
+        # Add new farm link (subtle, below the list)
+        st.markdown("")
+        if st.button("+ Add new farm", key="add_farm_link", use_container_width=False, type="secondary"):
             st.session_state['show_add_farm'] = True
             st.rerun()
 
     else:
         st.warning("No farms found in database")
-        if st.button("Add New Farm", use_container_width=True, type="primary"):
+        st.markdown("")
+        if st.button("+ Add new farm", key="add_farm_link_empty", use_container_width=False, type="secondary"):
             st.session_state['show_add_farm'] = True
             st.rerun()
-
-    # Database documentation button at the bottom
-    st.divider()
-    st.caption("Database Schema")
-    if st.button("View Documentation", use_container_width=True):
-        st.switch_page("pages/database_schema.py")
 
 # ==================== MAIN CONTENT ====================
 # Show environment info
