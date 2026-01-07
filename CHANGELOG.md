@@ -2,6 +2,22 @@
 
 <!-- version list -->
 
+## v1.2.3 (2026-01-07)
+
+### Bug Fixes
+
+- Refactor database module to fix Streamlit Cloud import errors
+  ([`3b26c0c`](https://github.com/DVDJNBR/WNDMNGR.APP/commit/3b26c0cffce2c7116009ac632ea26f75e3fc2ebe))
+
+- Remove duplicate import
+  ([`8ecca10`](https://github.com/DVDJNBR/WNDMNGR.APP/commit/8ecca10f0264821ef804346769d844ce81bf6c93))
+
+### Refactoring
+
+- Remove database documentation page and simplify farm creation UI
+  ([`18e01b9`](https://github.com/DVDJNBR/WNDMNGR.APP/commit/18e01b9dc665afc60b42c80b757c87bbcd50e9db))
+
+
 ## v1.2.2 (2026-01-07)
 
 
