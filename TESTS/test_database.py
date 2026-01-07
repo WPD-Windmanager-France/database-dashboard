@@ -14,14 +14,14 @@ def test_config_loading():
 def test_sqlite_connection():
     """Vérifie que SQLite se connecte et retourne des stats"""
     if settings.db_type == "sqlite":
-        from database import execute_sqlite_rpc
+        from database import execute_rpc
 
         db_path = os.path.join(os.path.dirname(__file__), "..", settings.db_path)
         if not os.path.exists(db_path):
             # Skip test si la base n'existe pas (CI environment)
             return
 
-        result = execute_sqlite_rpc('get_table_stats')
+        result = execute_rpc('get_table_stats')
         assert isinstance(result, list)
         assert len(result) > 0
 
@@ -37,11 +37,10 @@ def test_sqlite_connection():
 def test_supabase_imports():
     """Vérifie que les imports Supabase fonctionnent"""
     if settings.db_type == "supabase":
-        from database import execute_supabase_rpc, init_supabase_connection
+        from database import init_supabase_connection
 
         # Si l'import passe, c'est bon
         assert callable(init_supabase_connection)
-        assert callable(execute_supabase_rpc)
 
 
 def test_unified_rpc_interface():
