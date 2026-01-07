@@ -117,9 +117,15 @@ def execute_rpc(function_name: str) -> Any:
         raise ValueError(f"Type de base de données non supporté: {settings.db_type}")
 
 
-def execute_query(table: str, columns: str = "*", filters: Optional[dict] = None) -> Any:
+def execute_query(table: str, columns: str = "*", filters: Optional[dict] = None, order_by: Optional[str] = None) -> Any:
     """
-    Exécute une requête SELECT sur une table (Supabase uniquement pour l'instant)
+    Exécute une requête SELECT sur une table
+
+    Args:
+        table: Table name
+        columns: Columns to select (default: "*")
+        filters: Dictionary of filters {column: value}
+        order_by: Column name to order by
     """
     if settings.db_type == "supabase":
         try:
@@ -130,10 +136,70 @@ def execute_query(table: str, columns: str = "*", filters: Optional[dict] = None
                 for key, value in filters.items():
                     query = query.eq(key, value)
 
+            if order_by:
+                query = query.order(order_by)
+
             response = query.execute()
             return response.data
         except Exception as e:
             st.error(f"Error querying table {table}: {e}")
             return None
+    elif settings.db_type == "sqlite":
+        try:
+            engine = get_sqlite_engine()
+            with engine.connect() as conn:
+                # Build SQL query
+                sql_query = f"SELECT {columns} FROM {table}"
+
+                params = {}
+                if filters:
+                    where_clauses = []
+                    for i, (key, value) in enumerate(filters.items()):
+                        param_name = f"param_{i}"
+                        where_clauses.append(f"{key} = :{param_name}")
+                        params[param_name] = value
+                    sql_query += " WHERE " + " AND ".join(where_clauses)
+
+                if order_by:
+                    sql_query += f" ORDER BY {order_by}"
+
+                result = conn.execute(text(sql_query), params)
+                return [dict(row._mapping) for row in result]
+        except Exception as e:
+            st.error(f"Error querying table {table}: {e}")
+            return None
     else:
-        raise NotImplementedError("execute_query not implemented for SQLite")
+        raise ValueError(f"Unsupported database type: {settings.db_type}")
+
+
+@st.cache_data(ttl=300)
+def get_all_farms() -> list[dict]:
+    """
+    Récupère la liste de tous les parcs éoliens
+
+    Returns:
+        List of farms with uuid, code, project, spv
+    """
+    return execute_query(
+        table="farms",
+        columns="uuid, code, project, spv",
+        order_by="code"
+    ) or []
+
+
+def get_farm_by_code(farm_code: str) -> Optional[dict]:
+    """
+    Récupère les détails d'un parc par son code
+
+    Args:
+        farm_code: Farm code
+
+    Returns:
+        Farm details or None
+    """
+    results = execute_query(
+        table="farms",
+        columns="*",
+        filters={"code": farm_code}
+    )
+    return results[0] if results else None

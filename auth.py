@@ -458,17 +458,20 @@ def show_signup_form():
 
 
 def show_user_info():
-    """Display logged-in user info in sidebar"""
+    """Display logged-in user info in sidebar (compact version)"""
     if st.session_state.get('authenticated'):
         with st.sidebar:
-            st.divider()
             user = st.session_state.get('user', {})
             role = st.session_state.get('user_role', 'user')
+            email = user.get('email', 'User')
 
-            st.caption("Logged in as:")
-            st.write(f"**{user.get('email', 'User')}**")
-            st.caption(f"Role: {role.upper()}")
+            # Compact expander for user info
+            st.caption("Logged as")
+            with st.expander(email, expanded=False):
+                st.caption(f"**Role:** {role.upper()}")
+                st.divider()
+                if st.button("Logout", use_container_width=True, key="logout_btn"):
+                    logout_user()
+                    st.rerun()
 
-            if st.button("Logout", use_container_width=True):
-                logout_user()
-                st.rerun()
+            st.divider()
