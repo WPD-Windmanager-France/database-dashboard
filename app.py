@@ -7,7 +7,7 @@ from database import get_all_farms, get_farm_by_code
 # Configuration de la page
 st.set_page_config(
     page_title="Windmanager France - Database",
-    page_icon="⚡",
+    page_icon="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Wpd_Logo.svg/1200px-Wpd_Logo.svg.png",
     layout="wide"
 )
 
@@ -183,7 +183,7 @@ with st.sidebar:
 
 # ==================== MAIN CONTENT ====================
 # Show environment info
-st.caption(f"Environment: {settings.environment} | Database: {settings.db_type}")
+#st.caption(f"Environment: {settings.environment} | Database: {settings.db_type}")
 
 # Check if we should show the add farm dialog
 if st.session_state.get('show_add_farm', False):

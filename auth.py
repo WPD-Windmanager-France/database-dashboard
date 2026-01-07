@@ -466,10 +466,8 @@ def show_user_info():
             email = user.get('email', 'User')
 
             # Compact expander for user info
-            st.caption("Logged as")
             with st.expander(email, expanded=False):
                 st.caption(f"**Role:** {role.upper()}")
-                st.divider()
                 if st.button("Logout", use_container_width=True, key="logout_btn"):
                     logout_user()
                     st.rerun()
