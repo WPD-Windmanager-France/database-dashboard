@@ -90,10 +90,23 @@ section[data-testid="stSidebar"] .stRadio label[data-baseweb="radio"] > div:firs
     display: none;
 }
 
+/* Style du TEXTE sélectionné (Gras et Bleu, pas de bordure) */
+section[data-testid="stSidebar"] .stRadio input[type="radio"]:checked + div {
+    color: #1565c0 !important;
+    font-weight: 700 !important;
+    border: none !important;
+}
 section[data-testid="stSidebar"] .stRadio input[type="radio"]:checked + div + div {
-    background-color: #e3f2fd !important;
-    border-color: #2196f3 !important;
-    font-weight: 500;
+    color: #1565c0 !important;
+    font-weight: 700 !important;
+    border: none !important;
+}
+
+/* Style du BLOC (LABEL) sélectionné */
+/* Utilise :has() pour changer la bordure de la carte entière */
+section[data-testid="stSidebar"] .stRadio label:has(input:checked) {
+    border: 2px solid #2196f3 !important;
+    background-color: #f5faff !important; /* Fond très légèrement bleuté */
 }
 
 /* Style the scrollbar for radio list */
