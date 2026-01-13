@@ -1,6 +1,6 @@
 """Unified database interface - routes to SQLite or Supabase implementation"""
 
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 import streamlit as st
 
@@ -42,7 +42,7 @@ def execute_query(table: str, columns: str = "*", filters: Optional[dict] = None
 
 
 @st.cache_data(ttl=300)
-def get_all_farms() -> list[dict]:
+def get_all_farms() -> List[dict]:
     """
     Récupère la liste de tous les parcs éoliens
 

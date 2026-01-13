@@ -1,7 +1,7 @@
 """SQLite database implementation"""
 
 import os
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 import streamlit as st
 from sqlalchemy import create_engine, text
@@ -26,7 +26,7 @@ def get_sqlite_engine() -> Engine:
     return engine
 
 
-def execute_rpc(function_name: str) -> list[dict]:
+def execute_rpc(function_name: str) -> List[dict]:
     """Simule un appel RPC pour SQLite en exécutant des requêtes SQL natives"""
     if function_name == "get_table_stats":
         engine = get_sqlite_engine()
