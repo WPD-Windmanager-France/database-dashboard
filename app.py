@@ -242,6 +242,34 @@ def render_referents_tab(farm_uuid: str, farm_code: str):
     """Onglet Referents pour gérer les contacts du parc"""
     st.subheader("Referents")
 
+    # Add custom CSS for compact layout
+    st.markdown("""
+    <style>
+    /* Make buttons smaller */
+    button[kind="secondary"] {
+        padding: 1px 5px !important;
+        font-size: 11px !important;
+        min-height: 22px !important;
+        height: 22px !important;
+        min-width: 26px !important;
+    }
+    /* Reduce spacing between columns */
+    [data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child {
+        max-width: 40px !important;
+        min-width: 40px !important;
+        flex: 0 0 40px !important;
+    }
+    [data-testid="stHorizontalBlock"] {
+        gap: 0.2rem !important;
+    }
+    .person-name {
+        font-size: 14px;
+        color: #31333F;
+        line-height: 22px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
     # Define key person roles to display
     key_roles = [
         "Technical Manager",
@@ -260,31 +288,157 @@ def render_referents_tab(farm_uuid: str, farm_code: str):
         "Overseer"
     ]
 
-    st.markdown("### Key Contacts")
+    # Initialize edit state for each role
+    if 'editing_referent' not in st.session_state:
+        st.session_state.editing_referent = None
 
-    # Display in a 2-column layout
+    # Get all roles first
+    all_roles = execute_query("person_roles") or []
+    role_name_to_id = {role['role_name']: role['id'] for role in all_roles}
+
+    # Get all persons once
+    all_persons = execute_query("persons", order_by="last_name") or []
+    person_options = {"N/A": None}
+    for person in all_persons:
+        full_name = f"{person['first_name']} {person['last_name']}"
+        person_options[full_name] = person['uuid']
+
+    # Add "Add New" option at the end with emoji to make it stand out
+    person_options["➕ Add New Person"] = "ADD_NEW"
+
+    st.markdown("### Key Contacts")
     col1, col2 = st.columns(2)
 
     for idx, role_name in enumerate(key_roles):
-        person = get_person_by_role(farm_uuid, role_name)
-
         target_col = col1 if idx % 2 == 0 else col2
 
         with target_col:
-            st.markdown(f"**{role_name}**")
-            if person:
-                full_name = f"{person.get('first_name', '')} {person.get('last_name', '')}"
-                st.text(f"👤 {full_name}")
-                if person.get('email'):
-                    st.text(f"📧 {person.get('email')}")
-                if person.get('mobile'):
-                    st.text(f"📱 {person.get('mobile')}")
-            else:
-                st.text("N/A")
-            st.markdown("")  # Spacing
+            # Check if this role is being edited
+            is_editing = st.session_state.editing_referent == role_name
 
-    st.markdown("---")
-    st.info("Fonctionnalité d'ajout/modification de référents en cours de développement")
+            if is_editing:
+                st.markdown(f"**{role_name}**")
+
+                # Get current person for this role
+                current_person = get_person_by_role(farm_uuid, role_name)
+                current_name = "N/A"
+                if current_person:
+                    current_name = f"{current_person.get('first_name', '')} {current_person.get('last_name', '')}"
+
+                # Find index of current person
+                current_index = 0
+                if current_name in person_options:
+                    current_index = list(person_options.keys()).index(current_name)
+
+                selected_person = st.selectbox(
+                    f"Select person for {role_name}",
+                    options=list(person_options.keys()),
+                    index=current_index,
+                    key=f"ref_select_{role_name.replace(' ', '_')}",
+                    label_visibility="collapsed"
+                )
+
+                # Check if user selected "➕ Add New Person"
+                if selected_person == "➕ Add New Person":
+                    st.markdown("**Create New Person**")
+                    col_fn, col_ln = st.columns(2)
+                    with col_fn:
+                        new_first_name = st.text_input("First Name", key=f"new_fn_{role_name.replace(' ', '_')}")
+                    with col_ln:
+                        new_last_name = st.text_input("Last Name", key=f"new_ln_{role_name.replace(' ', '_')}")
+
+                # Save/Cancel buttons
+                col_a, col_b = st.columns(2)
+                with col_a:
+                    if st.button("Save", key=f"save_{role_name.replace(' ', '_')}", type="primary", use_container_width=True):
+                        role_id = role_name_to_id.get(role_name)
+
+                        if selected_person == "➕ Add New Person":
+                            # Create new person
+                            if new_first_name and new_last_name:
+                                import uuid
+                                new_person_uuid = str(uuid.uuid4())
+                                person_data = {
+                                    'uuid': new_person_uuid,
+                                    'first_name': new_first_name,
+                                    'last_name': new_last_name
+                                }
+                                result = insert_record("persons", person_data)
+                                if result:
+                                    person_uuid = new_person_uuid
+                                else:
+                                    st.error("Failed to create person")
+                                    person_uuid = None
+                            else:
+                                st.error("Please fill in both first and last name")
+                                person_uuid = None
+                        else:
+                            person_uuid = person_options[selected_person]
+
+                        if role_id and person_uuid is not None:
+                            # Check if referent already exists
+                            existing = execute_query(
+                                "farm_referents",
+                                filters={"farm_uuid": farm_uuid, "person_role_id": role_id}
+                            )
+
+                            if person_uuid is None or (selected_person == "N/A"):
+                                # Delete if exists and user selected N/A
+                                if existing:
+                                    delete_record(
+                                        "farm_referents",
+                                        {"farm_uuid": farm_uuid, "person_role_id": role_id}
+                                    )
+                            elif existing:
+                                # Update existing
+                                update_record(
+                                    "farm_referents",
+                                    {"farm_uuid": farm_uuid, "person_role_id": role_id},
+                                    {"person_uuid": person_uuid}
+                                )
+                            else:
+                                # Insert new
+                                insert_record(
+                                    "farm_referents",
+                                    {
+                                        "farm_uuid": farm_uuid,
+                                        "farm_code": farm_code,
+                                        "person_role_id": role_id,
+                                        "person_uuid": person_uuid
+                                    }
+                                )
+
+                            st.session_state.editing_referent = None
+                            st.rerun()
+
+                with col_b:
+                    if st.button("Cancel", key=f"cancel_{role_name.replace(' ', '_')}", use_container_width=True):
+                        st.session_state.editing_referent = None
+                        st.rerun()
+
+            else:
+                # Display mode
+                person = get_person_by_role(farm_uuid, role_name)
+
+                # Role name on top
+                st.markdown(f"**{role_name}**")
+
+                # Use narrow columns with minimal spacing
+                col_btn, col_name = st.columns([0.3, 5])
+                with col_btn:
+                    # Small edit button
+                    if st.button("✎", key=f"edit_{role_name.replace(' ', '_')}", type="secondary"):
+                        st.session_state.editing_referent = role_name
+                        st.rerun()
+
+                with col_name:
+                    if person:
+                        full_name = f"{person.get('first_name', '')} {person.get('last_name', '')}"
+                        st.markdown(f'<span class="person-name">{full_name}</span>', unsafe_allow_html=True)
+                    else:
+                        st.markdown('<span class="person-name">N/A</span>', unsafe_allow_html=True)
+
+            st.markdown("")  # Spacing
 
 
 def get_company_by_role(farm_uuid: str, role_name: str) -> dict:
@@ -546,8 +700,8 @@ def render_location_tab(farm_uuid: str, farm_code: str):
 
 
 def render_general_info_tab(farm_uuid: str, farm_code: str):
-    """Onglet General Information avec mode édition"""
-    st.subheader("General Information")
+    """Onglet General Informations avec mode édition"""
+    st.subheader("General Informations")
 
     # Get data
     data = get_farm_general_info(farm_uuid)
@@ -556,73 +710,90 @@ def render_general_info_tab(farm_uuid: str, farm_code: str):
     status = data.get('status', {})
     location = data.get('location', {})
 
-    # Initialize edit mode state
-    if 'edit_general_info' not in st.session_state:
-        st.session_state.edit_general_info = False
+    # Initialize edit state for each field
+    if 'editing_field' not in st.session_state:
+        st.session_state.editing_field = None
 
-    # Edit button
-    col1, col2, col3 = st.columns([1, 1, 6])
-    with col1:
-        if not st.session_state.edit_general_info:
-            if st.button("✏️ Modifier", key="edit_general_btn"):
-                st.session_state.edit_general_info = True
-                st.rerun()
+    # Get all farm types for selectbox
+    all_farm_types = execute_query("farm_types") or []
+    farm_type_options = {ft['type_title']: ft['id'] for ft in all_farm_types}
 
-    if st.session_state.edit_general_info:
-        st.info("Mode édition activé - Modifiez les champs ci-dessous")
+    st.markdown("### Farm Information")
+    col1, col2 = st.columns(2)
 
-        # Get all farm types for selectbox
-        all_farm_types = execute_query("farm_types") or []
-        farm_type_options = {ft['type_title']: ft['id'] for ft in all_farm_types}
+    # Define fields to display
+    fields = [
+        ("SPV", farm.get('spv'), "spv"),
+        ("Project Name", farm.get('project'), "project"),
+        ("Farm Code", farm.get('code'), "code"),
+        ("Farm Type", farm_type.get('type_title') if farm_type else 'N/A', "farm_type")
+    ]
 
-        # Farm basic info
-        st.markdown("### Farm Information")
-        col1, col2 = st.columns(2)
-        with col1:
-            new_spv = st.text_input("SPV", value=farm.get('spv', ''), key="edit_spv")
-            new_project = st.text_input("Project Name", value=farm.get('project', ''), key="edit_project")
-        with col2:
-            new_code = st.text_input("Farm Code", value=farm.get('code', ''), key="edit_code", disabled=True)
-            current_type = farm_type.get('type_title', 'Wind') if farm_type else 'Wind'
-            new_farm_type = st.selectbox(
-                "Farm Type",
-                options=list(farm_type_options.keys()),
-                index=list(farm_type_options.keys()).index(current_type) if current_type in farm_type_options else 0,
-                key="edit_farm_type"
-            )
+    for idx, (label, value, field_key) in enumerate(fields):
+        target_col = col1 if idx < 2 else col2
 
-        # Save/Cancel buttons
-        st.markdown("---")
-        col1, col2, col3 = st.columns([1, 1, 6])
-        with col1:
-            if st.button("✅ Valider", key="save_general_btn", type="primary"):
-                # Update farms table
-                farm_updates = {
-                    'spv': new_spv,
-                    'project': new_project,
-                    'farm_type_id': farm_type_options[new_farm_type]
-                }
-                update_record("farms", {"uuid": farm_uuid}, farm_updates)
+        with target_col:
+            is_editing = st.session_state.editing_field == field_key
 
-                st.success("Informations générales mises à jour avec succès!")
-                st.session_state.edit_general_info = False
-                st.rerun()
+            if is_editing:
+                st.markdown(f"**{label}**")
 
-        with col2:
-            if st.button("❌ Annuler", key="cancel_general_btn"):
-                st.session_state.edit_general_info = False
-                st.rerun()
+                if field_key == "code":
+                    # Farm code is not editable
+                    st.text_input("Farm Code", value=value or '', key=f"edit_{field_key}", disabled=True, label_visibility="collapsed")
+                elif field_key == "farm_type":
+                    # Farm type is a selectbox
+                    current_type = farm_type.get('type_title', 'Wind') if farm_type else 'Wind'
+                    selected_type = st.selectbox(
+                        "Farm Type",
+                        options=list(farm_type_options.keys()),
+                        index=list(farm_type_options.keys()).index(current_type) if current_type in farm_type_options else 0,
+                        key=f"edit_{field_key}",
+                        label_visibility="collapsed"
+                    )
+                else:
+                    # Regular text input
+                    new_value = st.text_input(label, value=value or '', key=f"edit_{field_key}", label_visibility="collapsed")
 
-    else:
-        # Display mode
-        st.markdown("### Farm Information")
-        col1, col2 = st.columns(2)
-        with col1:
-            render_field_display("SPV", farm.get('spv'))
-            render_field_display("Project Name", farm.get('project'))
-        with col2:
-            render_field_display("Farm Code", farm.get('code'))
-            render_field_display("Farm Type", farm_type.get('type_title') if farm_type else 'N/A')
+                # Save/Cancel buttons
+                col_a, col_b = st.columns(2)
+                with col_a:
+                    if st.button("Save", key=f"save_{field_key}", type="primary", use_container_width=True):
+                        # Update the field
+                        if field_key == "spv":
+                            update_record("farms", {"uuid": farm_uuid}, {'spv': new_value})
+                        elif field_key == "project":
+                            update_record("farms", {"uuid": farm_uuid}, {'project': new_value})
+                        elif field_key == "farm_type":
+                            update_record("farms", {"uuid": farm_uuid}, {'farm_type_id': farm_type_options[selected_type]})
+
+                        st.session_state.editing_field = None
+                        st.rerun()
+
+                with col_b:
+                    if st.button("Cancel", key=f"cancel_{field_key}", use_container_width=True):
+                        st.session_state.editing_field = None
+                        st.rerun()
+
+            else:
+                # Display mode
+                st.markdown(f"**{label}**")
+
+                # Use narrow columns with minimal spacing
+                col_btn, col_val = st.columns([0.3, 5])
+                with col_btn:
+                    # Small edit button (disabled for farm code)
+                    if field_key != "code":
+                        if st.button("✎", key=f"edit_btn_{field_key}", type="secondary"):
+                            st.session_state.editing_field = field_key
+                            st.rerun()
+                    else:
+                        st.markdown("")  # Empty space for alignment
+
+                with col_val:
+                    st.markdown(f'<span class="person-name">{value if value else "N/A"}</span>', unsafe_allow_html=True)
+
+            st.markdown("")  # Spacing
 
 
 # ==================== FARM MANAGEMENT ====================
