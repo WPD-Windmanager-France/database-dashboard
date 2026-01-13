@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.3.0 (2026-01-13)
+
+### Features
+
+- Add inline editing for referents and general info with person creation
+  ([`a4e997a`](https://github.com/DVDJNBR/WNDMNGR.APP/commit/a4e997ad4df4eaad90c92fa2954d798e54a11ec8))
+
+
 ## v1.2.5 (2026-01-13)
 
 ### Bug Fixes
