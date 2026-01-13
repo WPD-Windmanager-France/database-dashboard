@@ -212,7 +212,11 @@ __marimo__/
 RESOURCES/
 DATA/
 install.py
+merge_to_main.py
 
 
 
 *.ipynb
+
+# claude
+tmpclaude-*

@@ -86,3 +86,110 @@ def execute_query(table: str, columns: str = "*", filters: Optional[dict] = None
     except Exception as e:
         st.error(f"Error querying table {table}: {e}")
         return None
+
+
+def update_record(table: str, filters: dict, data: dict) -> bool:
+    """
+    Met à jour un enregistrement dans une table SQLite
+
+    Args:
+        table: Nom de la table
+        filters: Dictionnaire des filtres pour identifier l'enregistrement {column: value}
+        data: Dictionnaire des données à mettre à jour {column: new_value}
+
+    Returns:
+        True si la mise à jour a réussi, False sinon
+    """
+    try:
+        engine = get_sqlite_engine()
+        with engine.connect() as conn:
+            # Build UPDATE query
+            set_clauses = []
+            params = {}
+
+            for i, (key, value) in enumerate(data.items()):
+                param_name = f"set_{i}"
+                set_clauses.append(f"{key} = :{param_name}")
+                params[param_name] = value
+
+            where_clauses = []
+            for i, (key, value) in enumerate(filters.items()):
+                param_name = f"where_{i}"
+                where_clauses.append(f"{key} = :{param_name}")
+                params[param_name] = value
+
+            sql_query = f"UPDATE {table} SET {', '.join(set_clauses)}"
+            if where_clauses:
+                sql_query += f" WHERE {' AND '.join(where_clauses)}"
+
+            conn.execute(text(sql_query), params)
+            conn.commit()
+            return True
+    except Exception as e:
+        st.error(f"Error updating table {table}: {e}")
+        return False
+
+
+def insert_record(table: str, data: dict) -> Optional[dict]:
+    """
+    Insère un nouvel enregistrement dans une table SQLite
+
+    Args:
+        table: Nom de la table
+        data: Dictionnaire des données à insérer {column: value}
+
+    Returns:
+        L'enregistrement inséré ou None en cas d'erreur
+    """
+    try:
+        engine = get_sqlite_engine()
+        with engine.connect() as conn:
+            columns = ', '.join(data.keys())
+            placeholders = ', '.join([f":{key}" for key in data.keys()])
+
+            sql_query = f"INSERT INTO {table} ({columns}) VALUES ({placeholders})"
+
+            conn.execute(text(sql_query), data)
+            conn.commit()
+
+            # Return the inserted record
+            if 'uuid' in data:
+                return execute_query(table, filters={'uuid': data['uuid']})[0]
+            return data
+    except Exception as e:
+        st.error(f"Error inserting into table {table}: {e}")
+        return None
+
+
+def delete_record(table: str, filters: dict) -> bool:
+    """
+    Supprime un enregistrement d'une table SQLite
+
+    Args:
+        table: Nom de la table
+        filters: Dictionnaire des filtres pour identifier l'enregistrement {column: value}
+
+    Returns:
+        True si la suppression a réussi, False sinon
+    """
+    try:
+        engine = get_sqlite_engine()
+        with engine.connect() as conn:
+            where_clauses = []
+            params = {}
+
+            for i, (key, value) in enumerate(filters.items()):
+                param_name = f"where_{i}"
+                where_clauses.append(f"{key} = :{param_name}")
+                params[param_name] = value
+
+            sql_query = f"DELETE FROM {table}"
+            if where_clauses:
+                sql_query += f" WHERE {' AND '.join(where_clauses)}"
+
+            conn.execute(text(sql_query), params)
+            conn.commit()
+            return True
+    except Exception as e:
+        st.error(f"Error deleting from table {table}: {e}")
+        return False
