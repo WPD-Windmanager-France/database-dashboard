@@ -1,17 +1,24 @@
-[default]
-# Configuration par défaut (partagée entre tous les environnements)
-# Production par défaut pour sécurité en déploiement cloud
-app_name = "Windmanager"
-environment = "production"
-db_type = "supabase"
+# settings.toml
+# Dynaconf settings file
 
-[development]
-# Environnement de développement local
-environment = "development"
-db_type = "sqlite"
+[default]
+# Default settings that apply to all environments
+
+# Database type: "sqlite" for development, "supabase" for production
+DB_TYPE = "sqlite"
+
+# Authentication type: "local" for SQLite auth, "supabase" for Supabase auth
+AUTH_TYPE = "local"
+
+# SQLite database path (relative to project root)
 db_path = "DATA/windmanager.db"
 
+[development]
+# Development-specific settings
+CURRENT_ENV = "DEVELOPMENT"
+
 [production]
-# Environnement de production (Streamlit Cloud)
-environment = "production"
-db_type = "supabase"
+# Production-specific settings
+CURRENT_ENV = "PRODUCTION"
+DB_TYPE = "supabase"
+AUTH_TYPE = "supabase"
