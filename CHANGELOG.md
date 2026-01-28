@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.4.5 (2026-01-28)
+
+### Bug Fixes
+
+- Import all variables and functions from app for Taipy
+  ([`a403819`](https://github.com/DVDJNBR/WNDMNGR.APP/commit/a4038192dbc869a349de5ea480fc6dbd604d6458))
+
+
 ## v1.4.4 (2026-01-28)
 
 ### Bug Fixes
