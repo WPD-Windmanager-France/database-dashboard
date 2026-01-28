@@ -1086,6 +1086,6 @@ if __name__ == "__main__":
         port=port,
         debug=not is_cloud,
         use_reloader=not is_cloud,
-        title="WNDMNGR",
+        title="Windmanager Database",
         dark_mode=False
     )
