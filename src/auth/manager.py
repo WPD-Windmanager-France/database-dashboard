@@ -62,6 +62,18 @@ class AuthManager:
         """
         return self._provider.get_user_role(user_id)
 
+    def signup(self, email: str, password: str) -> Dict[str, Any]:
+        """
+        Signs up a new user using the configured provider.
+        """
+        return self._provider.signup(email, password)
+
+    def reset_password(self, email: str) -> bool:
+        """
+        Sends a password reset email.
+        """
+        return self._provider.reset_password(email)
+
     def get_current_user(self) -> Dict[str, Any]:
         """
         Returns the current user session information.

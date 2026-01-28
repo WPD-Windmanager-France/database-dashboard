@@ -80,3 +80,15 @@ class LocalProvider(AuthProvider):
 
         except Exception:
             return 'user' # Default role on error
+
+    def signup(self, email: str, password: str) -> Dict[str, Any]:
+        """
+        Sign up not supported in local dev mode.
+        """
+        raise NotImplementedError("Signup not supported for LocalProvider (dev mode)")
+
+    def reset_password(self, email: str) -> bool:
+        """
+        Password reset not supported in local dev mode.
+        """
+        raise NotImplementedError("Password reset not supported for LocalProvider (dev mode)")

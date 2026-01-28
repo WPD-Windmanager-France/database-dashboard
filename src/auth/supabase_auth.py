@@ -135,6 +135,25 @@ class SupabaseProvider(AuthProvider):
         except Exception:
             return 'user' # Default role on error
 
+    def reset_password(self, email: str) -> bool:
+        """
+        Send a password reset email to the user.
+
+        Returns:
+            True if email was sent successfully, raises ValueError on failure.
+        """
+        email = (email or "").strip()
+        if not email:
+            raise ValueError("Email is required for password reset")
+
+        client = self._get_client()
+        try:
+            # Note: redirect_to should point to your app's password update page
+            client.auth.reset_password_for_email(email)
+            return True
+        except Exception as e:
+            raise ValueError(f"Password reset error: {str(e)}")
+
     def signup(self, email: str, password: str) -> Dict[str, Any]:
         """
         Sign up a new user with Supabase.

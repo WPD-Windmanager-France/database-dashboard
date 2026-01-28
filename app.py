@@ -24,10 +24,12 @@ from src.database import (
 # Auth
 email = ""
 password = ""
+password_confirm = ""
 authenticated = False
 user_email = ""
 user_role = ""
 env_info = f"Environment: {settings.CURRENT_ENV} | Auth: {settings.AUTH_TYPE}"
+auth_mode = "login"  # "login", "signup", "reset"
 
 # Farms
 farms_list = []
@@ -119,6 +121,58 @@ def on_logout(state: State):
     state.farms_list = []
     state.selected_farm = None
     notify(state, "info", "Deconnexion reussie")
+
+
+def on_signup(state: State):
+    """Handle user signup."""
+    try:
+        if state.password != state.password_confirm:
+            notify(state, "error", "Les mots de passe ne correspondent pas")
+            return
+
+        if len(state.password) < 6:
+            notify(state, "error", "Le mot de passe doit avoir au moins 6 caracteres")
+            return
+
+        user_info = auth_manager.signup(state.email, state.password)
+        state.password = ""
+        state.password_confirm = ""
+        state.auth_mode = "login"
+        notify(state, "success", "Compte cree! Verifiez votre email pour confirmer.")
+    except ValueError as e:
+        notify(state, "error", str(e))
+    except Exception as e:
+        notify(state, "error", f"Erreur: {str(e)}")
+
+
+def on_reset_password(state: State):
+    """Handle password reset request."""
+    try:
+        auth_manager.reset_password(state.email)
+        state.auth_mode = "login"
+        notify(state, "success", "Email de reinitialisation envoye!")
+    except ValueError as e:
+        notify(state, "error", str(e))
+    except Exception as e:
+        notify(state, "error", f"Erreur: {str(e)}")
+
+
+def on_show_signup(state: State):
+    """Switch to signup mode."""
+    state.auth_mode = "signup"
+    state.password = ""
+    state.password_confirm = ""
+
+
+def on_show_login(state: State):
+    """Switch to login mode."""
+    state.auth_mode = "login"
+    state.password = ""
+
+
+def on_show_reset(state: State):
+    """Switch to reset password mode."""
+    state.auth_mode = "reset"
 
 
 # ==================== FARM FUNCTIONS ====================
@@ -542,6 +596,8 @@ page = """
 
 ---
 
+<|part|render={auth_mode == 'login'}|
+
 **Email**
 
 <|{email}|input|>
@@ -550,7 +606,55 @@ page = """
 
 <|{password}|input|password=True|>
 
-<|Se connecter|button|on_action=on_login|>
+<|Se connecter|button|on_action=on_login|class_name=primary-btn|>
+
+---
+
+<|Creer un compte|button|on_action=on_show_signup|> <|Mot de passe oublie?|button|on_action=on_show_reset|>
+
+|>
+
+<|part|render={auth_mode == 'signup'}|
+
+### Creer un compte
+
+*Uniquement pour les emails @wpd.fr*
+
+**Email**
+
+<|{email}|input|>
+
+**Mot de passe**
+
+<|{password}|input|password=True|>
+
+**Confirmer le mot de passe**
+
+<|{password_confirm}|input|password=True|>
+
+<|Creer mon compte|button|on_action=on_signup|class_name=primary-btn|>
+
+---
+
+<|Retour a la connexion|button|on_action=on_show_login|>
+
+|>
+
+<|part|render={auth_mode == 'reset'}|
+
+### Reinitialiser le mot de passe
+
+**Email**
+
+<|{email}|input|>
+
+<|Envoyer le lien|button|on_action=on_reset_password|class_name=primary-btn|>
+
+---
+
+<|Retour a la connexion|button|on_action=on_show_login|>
+
+|>
 
 |>
 
