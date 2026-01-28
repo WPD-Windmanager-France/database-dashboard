@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.5.0 (2026-01-28)
+
+### Features
+
+- Add signup and password reset features
+  ([`0df7618`](https://github.com/DVDJNBR/WNDMNGR.APP/commit/0df76189955095e4649c96c71f31d7edf1f0983f))
+
+
 ## v1.4.7 (2026-01-28)
 
 ### Bug Fixes
