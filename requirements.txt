@@ -4,3 +4,4 @@ supabase>=2.0.0
 pandas>=2.2.0
 python-dotenv>=1.0.0
 sqlalchemy>=2.0.0
+gunicorn>=21.0.0
