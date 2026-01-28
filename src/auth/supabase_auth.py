@@ -40,6 +40,13 @@ class SupabaseProvider(AuthProvider):
             A dictionary containing user information (id, email, role, access_token, refresh_token)
             or raises a ValueError on failure.
         """
+        # Validate inputs
+        email = (email or "").strip()
+        password = (password or "").strip()
+
+        if not email or not password:
+            raise ValueError(f"Email and password are required. Got email='{email}', password={'[HIDDEN]' if password else '[EMPTY]'}")
+
         client = self._get_client()
 
         try:
