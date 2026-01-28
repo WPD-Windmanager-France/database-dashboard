@@ -972,4 +972,16 @@ First: <|{new_person_first}|input|> Last: <|{new_person_last}|input|>
 """
 
 if __name__ == "__main__":
-    Gui(page=page).run(debug=True, port="auto", title="WNDMNGR", dark_mode=False)
+    import os
+    # Cloud deployment (Render sets PORT env var)
+    port = int(os.environ.get("PORT", 5000))
+    is_cloud = os.environ.get("PORT") is not None
+
+    Gui(page=page).run(
+        host="0.0.0.0" if is_cloud else "127.0.0.1",
+        port=port,
+        debug=not is_cloud,
+        use_reloader=not is_cloud,
+        title="WNDMNGR",
+        dark_mode=False
+    )
