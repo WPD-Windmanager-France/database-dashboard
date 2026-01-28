@@ -1,6 +1,6 @@
 [project]
 name = "wndmngr-app"
-version = "1.4.5"
+version = "1.4.6"
 description = "Windmanager Database Management Application"
 requires-python = ">=3.9"
 

@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.4.6 (2026-01-28)
+
+### Bug Fixes
+
+- Handle cloud deployment directly in app.py
+  ([`96ac34f`](https://github.com/DVDJNBR/WNDMNGR.APP/commit/96ac34f1e25d37f41ed4cd6f75a94c7b03270ad2))
+
+
 ## v1.4.5 (2026-01-28)
 
 ### Bug Fixes
