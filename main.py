@@ -2,7 +2,8 @@
 WNDMNGR - Main entry point for cloud deployment (Render, etc.)
 """
 import os
-from app import page
+# Import EVERYTHING from app (variables, functions, page)
+from app import *
 from taipy.gui import Gui
 
 # Create the GUI instance
