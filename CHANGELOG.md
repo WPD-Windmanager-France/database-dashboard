@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.4.7 (2026-01-28)
+
+### Bug Fixes
+
+- Add input validation and debug for Supabase login
+  ([`fea6ca2`](https://github.com/DVDJNBR/WNDMNGR.APP/commit/fea6ca21f8ec83c9380927bf82353c88ede7b626))
+
+
 ## v1.4.6 (2026-01-28)
 
 ### Bug Fixes
