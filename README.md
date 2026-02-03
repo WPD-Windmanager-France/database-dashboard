@@ -1,51 +1,47 @@
----
-title: Metabase Dashboard
-emoji: 📊
-colorFrom: blue
-colorTo: indigo
-sdk: docker
-pinned: false
-app_port: 3000
----
+# WPD Wind Manager Dashboard
 
-# Metabase Dashboard on Hugging Face Spaces
+Dashboard de visualisation des données éoliennes pour WPD Windmanager France, construit avec [Evidence.dev](https://evidence.dev/).
 
-This repository hosts a deployment of [Metabase](https://www.metabase.com/), a leading open-source business intelligence tool, on Hugging Face Spaces. It provides a powerful, user-friendly interface for data exploration and dashboarding, serving as an open-source alternative to proprietary solutions like Power BI.
+## Stack Technique
 
-## Getting Started
+- **Frontend**: Evidence.dev (framework de BI basé sur Markdown + SQL)
+- **Base de données**: Supabase (PostgreSQL)
+- **Hébergement**: Cloudflare Pages
 
-To launch your Metabase instance:
+## Structure du Projet
 
-1.  **Clone this repository** to your Hugging Face Space or create a new Space pointing to this repository.
-2.  The `Dockerfile` will automatically build and run the latest Metabase image.
-3.  Once the Space is built and running, your Metabase instance will be accessible via the Space URL.
+```
+├── dashboard/           # Application Evidence.dev
+│   ├── pages/          # Pages Markdown avec requêtes SQL
+│   ├── sources/        # Configuration des sources de données
+│   └── package.json
+├── docs/               # Documentation du projet
+└── bmad-agent/         # Configuration BMAD
+```
 
-## ⚠️ Important: Data Persistence
+## Déploiement
 
-By default, Metabase uses an embedded H2 database to store its configuration (users, dashboards, questions). If this Space restarts or is rebuilt, all data stored in the H2 database will be **lost**.
+### Cloudflare Pages
 
-For production use and to ensure your dashboards and configurations are permanent, it is **highly recommended** to connect Metabase to an external PostgreSQL database. Your existing Supabase database is an ideal candidate for this purpose.
+1. Connecter le repo GitHub
+2. Configuration :
+   - **Root Directory**: `dashboard`
+   - **Build Command**: `npm run sources && npm run build`
+   - **Build Output Directory**: `build`
+3. Variables d'environnement :
+   - `DATABASE_URL`: URL de connexion PostgreSQL Supabase
 
-### Recommended Persistence Configuration (using Supabase)
+## Développement Local
 
-To enable persistent storage for Metabase's internal data, configure the following environment variables in your Hugging Face Space settings:
+```bash
+cd dashboard
+npm install
+npm run dev
+```
 
--   `MB_DB_TYPE`: `postgres`
--   `MB_DB_DBNAME`: `postgres` (or your specific Supabase database name)
--   `MB_DB_PORT`: `5432` (standard PostgreSQL port)
--   `MB_DB_USER`: Your Supabase database username
--   `MB_DB_PASS`: Your Supabase database password
--   `MB_DB_HOST`: Your Supabase database host (e.g., `db.your-project-ref.supabase.co`)
+Le dashboard sera accessible sur `http://localhost:3000`.
 
-Once these variables are set, Metabase will use your Supabase instance to store its metadata, ensuring your work is saved across restarts.
+## Documentation
 
-## Features
-
--   **Interactive Dashboards:** Create and share dynamic dashboards from your Supabase data.
--   **SQL Editor:** Write and execute SQL queries directly against your database.
--   **Visualizations:** A wide array of chart types to visualize your data effectively.
--   **No-Code Interface:** Explore data without writing a single line of code.
-
-## Contribute
-
-Feel free to fork this repository, improve the deployment configuration, or contribute to the Metabase project directly.
+- [Epic 1 - MVP Setup](docs/epic-1-mvp-setup.md)
+- [Sprint Change Proposal](Sprint_Change_Proposal.md)
