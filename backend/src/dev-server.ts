@@ -5,16 +5,22 @@ import { cors } from 'hono/cors'
 import { Env } from './config/auth'
 import { authMiddleware, User } from './middleware/auth'
 import authRoutes from './routes/auth'
+import dbRoutes from './routes/db'
 
 // Load environment variables from .dev.vars
 config({ path: '.dev.vars' })
 
 // Create env object from process.env
 const env: Env = {
+  // Azure Entra ID
   AZURE_TENANT_ID: process.env.AZURE_TENANT_ID || '',
   AZURE_CLIENT_ID: process.env.AZURE_CLIENT_ID || '',
   AZURE_CLIENT_SECRET: process.env.AZURE_CLIENT_SECRET || '',
-  REDIRECT_URI: process.env.REDIRECT_URI || 'http://localhost:8787/auth/callback'
+  REDIRECT_URI: process.env.REDIRECT_URI || 'http://localhost:8787/auth/callback',
+  // Supabase
+  SUPABASE_URL: process.env.SUPABASE_URL || '',
+  SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY || '',
+  SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY
 }
 
 // Create app with injected env for Node.js dev
@@ -51,6 +57,9 @@ app.get('/health', (c) => {
 
 // Auth routes
 app.route('/auth', authRoutes)
+
+// Database routes
+app.route('/db', dbRoutes)
 
 // Protected routes
 const protectedRoutes = new Hono<{

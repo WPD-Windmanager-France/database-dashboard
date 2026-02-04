@@ -57,6 +57,14 @@ Le serveur sera accessible sur `http://localhost:8787`
 |---------|----------|-------------|
 | GET | `/me` | Retourne les infos de l'utilisateur authentifié |
 
+### Database
+
+| Méthode | Endpoint | Description |
+|---------|----------|-------------|
+| GET | `/db/status` | Vérifie la connexion à Supabase |
+| GET | `/db/tables` | Liste les tables (nécessite fonction SQL) |
+| GET | `/db/query-test` | Test de requête sur la table farms |
+
 ## Authentication (Microsoft Entra ID)
 
 ### Configuration requise
@@ -96,6 +104,44 @@ Le serveur sera accessible sur `http://localhost:8787`
 4. Requests avec Header: Authorization: Bearer <access_token>
 ```
 
+## Database (Supabase)
+
+### Configuration requise
+
+1. **Créer un projet Supabase** sur [supabase.com](https://supabase.com)
+
+2. **Récupérer les credentials** :
+   - Settings → API
+   - Copier: Project URL et anon/public key
+
+3. **Configurer les variables d'environnement** :
+
+   Ajouter dans `.dev.vars` :
+   ```
+   SUPABASE_URL=https://xxx.supabase.co
+   SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+   ```
+
+   Pour la production :
+   ```bash
+   npx wrangler secret put SUPABASE_URL
+   npx wrangler secret put SUPABASE_ANON_KEY
+   ```
+
+### Fonction SQL utile (optionnelle)
+
+Pour lister les tables via `/db/tables`, créer cette fonction dans Supabase SQL Editor :
+
+```sql
+CREATE OR REPLACE FUNCTION get_tables()
+RETURNS TABLE (table_name text, table_type text) AS $$
+  SELECT table_name::text, table_type::text
+  FROM information_schema.tables
+  WHERE table_schema = 'public'
+  ORDER BY table_name;
+$$ LANGUAGE sql SECURITY DEFINER;
+```
+
 ## Structure du projet
 
 ```
@@ -104,11 +150,15 @@ backend/
 │   ├── index.ts           # Point d'entrée Hono
 │   ├── dev-server.ts      # Serveur Node.js pour dev local
 │   ├── config/
-│   │   └── auth.ts        # Configuration Entra ID
+│   │   ├── auth.ts        # Configuration Entra ID + Env types
+│   │   └── database.ts    # Configuration Supabase
+│   ├── lib/
+│   │   └── supabase.ts    # Client Supabase + helpers
 │   ├── middleware/
 │   │   └── auth.ts        # Middleware JWT validation
 │   └── routes/
-│       └── auth.ts        # Routes OAuth (/auth/*)
+│       ├── auth.ts        # Routes OAuth (/auth/*)
+│       └── db.ts          # Routes Database (/db/*)
 ├── wrangler.toml          # Configuration Cloudflare Worker
 ├── package.json           # Dépendances et scripts
 ├── tsconfig.json          # Configuration TypeScript

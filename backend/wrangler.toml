@@ -11,6 +11,12 @@ local_protocol = "http"
 REDIRECT_URI = "http://localhost:8787/auth/callback"
 
 # Secrets (set via `wrangler secret put` or .dev.vars for local dev)
+# Azure Entra ID
 # AZURE_TENANT_ID
 # AZURE_CLIENT_ID
 # AZURE_CLIENT_SECRET
+#
+# Supabase Database
+# SUPABASE_URL
+# SUPABASE_ANON_KEY
+# SUPABASE_SERVICE_ROLE_KEY (optional, for admin operations)

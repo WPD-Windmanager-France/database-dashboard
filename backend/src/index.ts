@@ -3,6 +3,7 @@ import { cors } from 'hono/cors'
 import { Env } from './config/auth'
 import { authMiddleware, User } from './middleware/auth'
 import authRoutes from './routes/auth'
+import dbRoutes from './routes/db'
 
 // Define app with environment bindings and variables
 const app = new Hono<{
@@ -32,6 +33,9 @@ app.get('/health', (c) => {
 
 // Auth routes (public)
 app.route('/auth', authRoutes)
+
+// Database routes (public for now - can be protected later)
+app.route('/db', dbRoutes)
 
 // Protected routes - require authentication
 const protectedRoutes = new Hono<{
