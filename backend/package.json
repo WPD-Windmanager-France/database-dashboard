@@ -2,7 +2,6 @@
   "name": "wndmngr-backend",
   "version": "1.0.0",
   "description": "WNDMNGR Backend API - Cloudflare Worker with Hono",
-  "type": "module",
   "scripts": {
     "dev": "node node_modules/wrangler/bin/wrangler.js dev",
     "dev:node": "npm run build:node && node dist/dev-server.js",
@@ -20,7 +19,9 @@
   "license": "ISC",
   "dependencies": {
     "@hono/node-server": "^1.19.9",
-    "hono": "^4.11.7"
+    "dotenv": "^17.2.3",
+    "hono": "^4.11.7",
+    "jose": "^6.1.3"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260203.0",
