@@ -10,7 +10,8 @@
 	},
 	"devDependencies": {
 		"@evidence-dev/evidence": "^40.0.0",
-		"@evidence-dev/postgres": "^1.0.0"
+		"@evidence-dev/postgres": "^1.0.0",
+		"@evidence-dev/tailwind": "^3.0.0"
 	},
 	"type": "module"
 }
