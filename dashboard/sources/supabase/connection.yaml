@@ -2,3 +2,4 @@ name: supabase
 type: postgres
 options:
   connectionString: "${DATABASE_URL}"
+  ssl: true
