@@ -3,7 +3,6 @@
 	"version": "0.0.1",
 	"private": true,
 	"scripts": {
-		"sources": "evidence sources",
 		"dev": "evidence dev",
 		"build": "evidence build",
 		"preview": "evidence preview"
@@ -12,5 +11,8 @@
 		"@evidence-dev/evidence": "^4.0.0",
 		"@evidence-dev/postgres": "^1.0.0"
 	},
-    "type": "module"
+	"overrides": {
+		"vite": "^5.0.0"
+	},
+	"type": "module"
 }
