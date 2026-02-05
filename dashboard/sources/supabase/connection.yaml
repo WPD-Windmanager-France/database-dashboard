@@ -6,5 +6,4 @@ options:
   database: postgres
   user: "${POSTGRES_USER}"
   password: "${POSTGRES_PASSWORD}"
-  ssl:
-    sslmode: require
+  ssl: true
