@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { useAuth } from "@/context/AuthContext"
+import Link from "next/link"
 
 export default function Home() {
   const { user, login, logout, isLoading } = useAuth();
@@ -41,7 +42,9 @@ export default function Home() {
                 You are successfully authenticated.
               </p>
               <div className="flex gap-2 mt-2">
-                <Button variant="outline" className="flex-1">View Farms</Button>
+                <Button variant="outline" className="flex-1" asChild>
+                  <Link href="/farms">View Farms</Link>
+                </Button>
                 <Button variant="destructive" onClick={logout}>Sign Out</Button>
               </div>
             </>
