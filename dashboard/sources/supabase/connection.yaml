@@ -1,9 +1,2 @@
 name: supabase
 type: postgres
-options:
-  host: "${POSTGRES_HOST}"
-  port: 6543
-  database: postgres
-  user: "${POSTGRES_USER}"
-  password: "${POSTGRES_PASSWORD}"
-  ssl: true
