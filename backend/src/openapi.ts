@@ -108,23 +108,11 @@ This API satisfies the B2 certification requirements:
       get: {
         tags: ['Authentication'],
         summary: 'Initiate OAuth 2.0 Login',
-        description: 'Generates and returns the Microsoft Entra ID authorization URL. Redirect the user to this URL to initiate the authentication flow.',
+        description: 'Redirects the user directly to the Microsoft Entra ID authorization page.',
         operationId: 'initiateLogin',
         responses: {
-          '200': {
-            description: 'Authorization URL generated successfully',
-            content: {
-              'application/json': {
-                schema: {
-                  type: 'object',
-                  properties: {
-                    authUrl: { type: 'string', format: 'uri', description: 'URL to redirect user for authentication' },
-                    state: { type: 'string', description: 'CSRF protection state token' },
-                    message: { type: 'string' }
-                  }
-                }
-              }
-            }
+          '302': {
+            description: 'Redirect to Azure Login'
           }
         }
       }
@@ -133,31 +121,16 @@ This API satisfies the B2 certification requirements:
       get: {
         tags: ['Authentication'],
         summary: 'OAuth 2.0 Callback',
-        description: 'Handles the OAuth callback from Microsoft Entra ID. Exchanges the authorization code for access and ID tokens.',
+        description: 'Handles the OAuth callback from Microsoft Entra ID. Exchanges the authorization code for tokens and redirects back to the frontend.',
         operationId: 'handleOAuthCallback',
         parameters: [
-          { name: 'code', in: 'query', required: true, description: 'Authorization code from Entra ID', schema: { type: 'string' } },
-          { name: 'state', in: 'query', description: 'State parameter for CSRF validation', schema: { type: 'string' } }
+          { name: 'code', in: 'query', required: true, description: 'Authorization code from Entra ID', schema: { type: 'string' } }
         ],
         responses: {
-          '200': {
-            description: 'Authentication successful, tokens returned',
-            content: {
-              'application/json': {
-                schema: {
-                  type: 'object',
-                  properties: {
-                    message: { type: 'string' },
-                    access_token: { type: 'string', description: 'JWT access token for API requests' },
-                    id_token: { type: 'string', description: 'JWT ID token with user claims' },
-                    token_type: { type: 'string', example: 'Bearer' },
-                    expires_in: { type: 'integer', description: 'Token lifetime in seconds' }
-                  }
-                }
-              }
-            }
+          '302': {
+            description: 'Redirect to Frontend with tokens'
           },
-          '400': { description: 'Authentication failed - invalid code or state' }
+          '400': { description: 'Authentication failed' }
         }
       }
     },
@@ -185,6 +158,67 @@ This API satisfies the B2 certification requirements:
             }
           },
           '503': { description: 'Database connection failed' }
+        }
+      }
+    },
+    '/db/tables': {
+      get: {
+        tags: ['Database'],
+        summary: 'List Database Tables',
+        description: 'Returns a list of all tables in the public schema of the database.',
+        operationId: 'listTables',
+        responses: {
+          '200': {
+            description: 'List of tables',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    tables: { type: 'array', items: { type: 'object' } },
+                    count: { type: 'integer' }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    '/db/schema': {
+      get: {
+        tags: ['Database'],
+        summary: 'Get Detailed Database Schema',
+        description: 'Returns a comprehensive JSON representation of all tables and their columns (types, nullability) in the public schema.',
+        operationId: 'getDatabaseSchema',
+        responses: {
+          '200': {
+            description: 'Detailed schema information',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      table_name: { type: 'string' },
+                      columns: {
+                        type: 'array',
+                        items: {
+                          type: 'object',
+                          properties: {
+                            column_name: { type: 'string' },
+                            data_type: { type: 'string' },
+                            is_nullable: { type: 'string' }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -357,8 +391,8 @@ This API satisfies the B2 certification requirements:
       },
       delete: {
         tags: ['Farms'],
-        summary: 'Delete Farm',
-        description: 'Permanently deletes a farm from the database. This operation will fail if the farm has related records (substations, turbines, referents, etc.).',
+        summary: 'Delete Farm (Cascading)',
+        description: 'Permanently deletes a farm from the database along with all associated data (substations, turbines, locations, statuses, etc.) in a single cascading operation.',
         operationId: 'deleteFarm',
         security: [{ bearerAuth: [] }],
         parameters: [
