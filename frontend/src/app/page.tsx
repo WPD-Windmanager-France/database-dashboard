@@ -42,11 +42,11 @@ export default function Home() {
                 You are successfully authenticated.
               </p>
               <div className="flex flex-wrap gap-2 mt-2">
-                <Button variant="outline" className="flex-1" asChild>
-                  <Link href="/farms">View Farms</Link>
+                <Button className="flex-1" asChild>
+                  <Link href="/dashboard">Go to Dashboard</Link>
                 </Button>
                 <Button variant="outline" className="flex-1" asChild>
-                  <Link href="/docs">Documentation</Link>
+                  <Link href="/farms">Farm List</Link>
                 </Button>
                 <Button variant="destructive" className="w-full" onClick={logout}>Sign Out</Button>
               </div>
