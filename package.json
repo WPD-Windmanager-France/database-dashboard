@@ -9,7 +9,8 @@
     "check": "svelte-kit sync && svelte-check --accelerated",
     "check:watch": "svelte-kit sync && svelte-check --accelerated --watch",
     "lint": "prettier --check . && eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "deploy": "npm run build && wrangler pages deploy .svelte-kit/cloudflare"
   },
   "devDependencies": {
     "@sveltejs/adapter-cloudflare": "^4.0.0",
