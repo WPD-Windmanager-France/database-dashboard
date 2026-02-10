@@ -1,15 +1,16 @@
-import { redirect, type Handle } from '@sveltejs/kit';
+import { type Handle } from '@sveltejs/kit';
+import { dev } from '$app/environment';
+import { env } from '$env/dynamic/private';
 
 export const handle: Handle = async ({ event, resolve }) => {
 	// Cloudflare Access headers
 	const email = event.request.headers.get('cf-access-authenticated-user-email');
 	const commonName = event.request.headers.get('cf-access-authenticated-user-common-name');
-	
+
 	// Mock logic for local development
-	const isDev = process.env.NODE_ENV === 'development';
-	const mockEmail = process.env.DEV_MOCK_EMAIL || 'dev@wpd.fr';
-	
-	if (!email && isDev) {
+	const mockEmail = env.DEV_MOCK_EMAIL || 'dev@wpd.fr';
+
+	if (!email && dev) {
 		event.locals.user = {
 			email: mockEmail,
 			name: mockEmail.split('@')[0]
