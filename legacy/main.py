@@ -2,17 +2,23 @@
 WNDMNGR - Main entry point for cloud deployment (Render, etc.)
 """
 import os
-from app import page
+# Import EVERYTHING from app (variables, functions, page)
+from app import *
 from taipy.gui import Gui
 
-if __name__ == "__main__":
-    # Get port from environment variable (Render sets this)
-    port = int(os.environ.get("PORT", 5000))
+# Create the GUI instance
+gui = Gui(page=page)
 
-    # Run the app - bind to 0.0.0.0 for cloud deployment
-    Gui(page=page).run(
+# Get port from environment variable (Render sets this)
+port = int(os.environ.get("PORT", 5000))
+
+if __name__ == "__main__":
+    # Run the app - production settings
+    gui.run(
         host="0.0.0.0",
         port=port,
         title="WNDMNGR",
-        dark_mode=False
+        dark_mode=False,
+        debug=False,
+        use_reloader=False
     )
