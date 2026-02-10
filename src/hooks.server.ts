@@ -26,6 +26,11 @@ export const handle: Handle = async ({ event, resolve }) => {
 			name: commonName || email.split('@')[0]
 		};
 	} else {
+		// PRODUCTION GUARD: No CF headers and not dev → block access entirely
+		// This prevents data exposure if Cloudflare Access is misconfigured
+		if (event.url.pathname.startsWith('/api') || event.url.pathname.startsWith('/dashboard')) {
+			return new Response('Unauthorized – authentication required', { status: 401 });
+		}
 		event.locals.user = null;
 	}
 
