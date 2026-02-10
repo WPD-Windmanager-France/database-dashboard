@@ -8,8 +8,9 @@
 
 ## Authentication & Security
 *   **Identity Provider**: Microsoft Entra ID (via Azure App Registration)
-*   **Access Control**: Cloudflare Access (Zero Trust)
-*   **Application Auth**: SvelteKit Hook checking for Cloudflare JWT/Headers
+*   **Auth Service**: Supabase Auth with Microsoft OAuth provider
+*   **Session Management**: `@supabase/ssr` (cookie-based server-side sessions)
+*   **Application Auth**: SvelteKit Hook validating Supabase session + `@wpd.fr` domain restriction
 
 ## Database & Data
 *   **Database**: Supabase (PostgreSQL)
@@ -22,6 +23,7 @@
 *   **CI/CD**: GitHub Actions
 
 ## Key Libraries
+*   `@supabase/ssr`: Server-side Supabase Auth for SvelteKit
 *   `lucide-svelte`: Icons
 *   `chart.js` or `layerchart`: Data visualization
 *   `zod`: Schema validation for forms and API routes
