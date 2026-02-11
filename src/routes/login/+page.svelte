@@ -8,7 +8,9 @@
 	let email = '';
 	let password = '';
 	let error = '';
+	let success = '';
 	let loading = false;
+	let mode: 'login' | 'signup' = 'login';
 
 	// Check for error from URL params (e.g. domain restriction)
 	$: {
@@ -26,6 +28,7 @@
 
 		loading = true;
 		error = '';
+		success = '';
 
 		const supabase = createBrowserClient(data.supabaseUrl, data.supabaseAnonKey);
 
@@ -44,9 +47,46 @@
 			}
 			loading = false;
 		} else {
-			// Session is set in cookies, redirect to dashboard
 			goto('/dashboard');
 		}
+	}
+
+	async function handleSignup() {
+		if (!email || !password) {
+			error = "Veuillez remplir tous les champs.";
+			return;
+		}
+		if (!email.endsWith('@wpd.fr')) {
+			error = "Seuls les emails @wpd.fr sont autorisés.";
+			return;
+		}
+		if (password.length < 6) {
+			error = "Le mot de passe doit contenir au moins 6 caractères.";
+			return;
+		}
+
+		loading = true;
+		error = '';
+		success = '';
+
+		const supabase = createBrowserClient(data.supabaseUrl, data.supabaseAnonKey);
+
+		const { error: authError } = await supabase.auth.signUp({
+			email,
+			password
+		});
+
+		if (authError) {
+			if (authError.message.includes('already registered')) {
+				error = "Cet email est déjà inscrit.";
+			} else {
+				error = authError.message;
+			}
+		} else {
+			success = "Compte créé ! Vérifiez votre email pour confirmer, puis connectez-vous.";
+			mode = 'login';
+		}
+		loading = false;
 	}
 </script>
 
@@ -62,12 +102,18 @@
 		</div>
 
 		{#if error}
-			<div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+			<div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
 				<p class="text-red-700 text-sm">{error}</p>
 			</div>
 		{/if}
 
-		<form on:submit|preventDefault={handleLogin} class="space-y-4">
+		{#if success}
+			<div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+				<p class="text-green-700 text-sm">{success}</p>
+			</div>
+		{/if}
+
+		<form on:submit|preventDefault={mode === 'login' ? handleLogin : handleSignup} class="space-y-4">
 			<div>
 				<label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
 				<input
@@ -97,8 +143,32 @@
 				class="w-full bg-[#1565c0] hover:bg-[#0d47a1] text-white font-medium py-3 px-6 rounded-lg transition-colors disabled:opacity-50"
 				disabled={loading}
 			>
-				{loading ? 'Connexion...' : 'Se connecter'}
+				{#if loading}
+					Chargement...
+				{:else if mode === 'login'}
+					Se connecter
+				{:else}
+					Créer le compte
+				{/if}
 			</button>
 		</form>
+
+		<div class="mt-4 text-center">
+			{#if mode === 'login'}
+				<button
+					on:click={() => { mode = 'signup'; error = ''; success = ''; }}
+					class="text-sm text-[#1565c0] hover:underline"
+				>
+					Pas de compte ? Créer un compte
+				</button>
+			{:else}
+				<button
+					on:click={() => { mode = 'login'; error = ''; success = ''; }}
+					class="text-sm text-[#1565c0] hover:underline"
+				>
+					Déjà un compte ? Se connecter
+				</button>
+			{/if}
+		</div>
 	</div>
 </div>
