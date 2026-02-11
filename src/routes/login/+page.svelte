@@ -47,7 +47,7 @@
 			}
 			loading = false;
 		} else {
-			goto('/dashboard');
+			goto('/data');
 		}
 	}
 

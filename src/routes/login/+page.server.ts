@@ -5,7 +5,7 @@ import type { PageServerLoad } from './$types';
 export const load: PageServerLoad = async ({ locals }) => {
 	// If already authenticated, redirect to dashboard
 	if (locals.user) {
-		redirect(303, '/dashboard');
+		redirect(303, '/data');
 	}
 
 	// Pass Supabase credentials to client for OAuth trigger

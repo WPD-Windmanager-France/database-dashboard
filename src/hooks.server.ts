@@ -90,7 +90,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 					headers: { 'Content-Type': 'application/json' }
 				});
 			}
-			if (event.url.pathname.startsWith('/dashboard')) {
+			if (event.url.pathname.startsWith('/data')) {
 				redirect(303, '/login');
 			}
 		}
