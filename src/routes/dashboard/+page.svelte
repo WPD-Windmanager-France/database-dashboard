@@ -133,23 +133,17 @@
 	<aside class="sidebar w-[300px] flex-shrink-0 p-5 flex flex-col">
 		{#if data.user}
 			<div class="bg-white rounded-lg p-4 mb-4 shadow-sm">
-				<div class="flex items-center justify-between">
-					<div>
-						<div class="font-semibold text-sm">{data.user.name}</div>
-						<div class="text-xs text-gray-500">{data.user.email}</div>
-					</div>
-					<form method="POST" action="/api/auth/logout">
-						<button
-							type="submit"
-							class="text-gray-400 hover:text-red-500 transition-colors"
-							title="Déconnexion"
-						>
-							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-							</svg>
-						</button>
-					</form>
-				</div>
+				<div class="text-xs text-gray-500 mb-1">Connecte en tant que</div>
+				<div class="font-semibold text-sm">{data.user.name}</div>
+				<div class="text-xs text-gray-500">{data.user.email}</div>
+				<form method="POST" action="/api/auth/logout">
+					<button
+						type="submit"
+						class="mt-3 w-full text-xs text-gray-500 hover:text-red-600 border border-gray-200 hover:border-red-200 rounded px-3 py-1.5 transition-colors"
+					>
+						Se deconnecter
+					</button>
+				</form>
 			</div>
 		{/if}
 

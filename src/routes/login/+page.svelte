@@ -91,13 +91,13 @@
 </script>
 
 <svelte:head>
-	<title>Connexion — WNDMNGR</title>
+	<title>Connexion — Windmanager France</title>
 </svelte:head>
 
 <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
 	<div class="bg-white rounded-xl shadow-lg p-8 max-w-md w-full mx-4">
 		<div class="mb-6 text-center">
-			<h1 class="text-2xl font-bold text-gray-800">WNDMNGR</h1>
+			<h1 class="text-2xl font-bold text-gray-800">Windmanager France</h1>
 			<p class="text-sm text-gray-500 mt-1">Wind Farm Management Dashboard</p>
 		</div>
 
