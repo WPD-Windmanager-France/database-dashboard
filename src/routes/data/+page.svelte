@@ -4,6 +4,7 @@
 	import EditableField from '$lib/components/ui/EditableField.svelte';
 	import FarmCard from '$lib/components/ui/FarmCard.svelte';
 	import PerformanceChart from '$lib/components/viz/PerformanceChart.svelte';
+	import ProductionChart from '$lib/components/viz/ProductionChart.svelte';
 	import StatCard from '$lib/components/viz/StatCard.svelte';
 
 	export let data: PageData;
@@ -351,6 +352,12 @@
 						value={fd?.status?.farm_status ?? 'N/A'}
 					/>
 				</div>
+
+				{#if farm}
+					<div class="mb-6">
+						<ProductionChart farmUuid={farm.uuid} />
+					</div>
+				{/if}
 
 				<div class="grid grid-cols-2 gap-4">
 					<PerformanceChart

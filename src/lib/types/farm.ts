@@ -113,6 +113,15 @@ export interface FarmFinancialGuarantee {
 	due_date: string | null;
 }
 
+// Production data (10-min resolution from Rotorsoft)
+export interface WtgProduction10m {
+	pu_id: string;
+	timestamp: string;
+	active_power_avg_kw: number | null;
+	wind_speed_avg_ms: number | null;
+	op_state: string | null;
+}
+
 // Performance (1:N by year)
 export interface FarmPerformance {
 	farm_uuid: string;
