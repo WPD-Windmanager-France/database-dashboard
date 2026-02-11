@@ -8,7 +8,7 @@
 <div class="farm-list-scroll space-y-1">
 	{#each farms as farm (farm.uuid)}
 		<a
-			href="/dashboard?farm={farm.uuid}"
+			href="/data?farm={farm.uuid}"
 			class="block rounded-lg px-3 py-2 transition-colors {farm.uuid === selectedUuid
 				? 'bg-[var(--color-primary)] text-white shadow'
 				: 'bg-white hover:bg-gray-100 text-gray-700'}"
